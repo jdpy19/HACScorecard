@@ -15,7 +15,7 @@ import os
 import shutil
 import datetime as dt
 
-class calculateHACData:
+class CalculateHACData:
     def __init__(self,filename,popStats):
         
         self.popStats = popStats
@@ -25,7 +25,7 @@ class calculateHACData:
         self.output_data = pd.DataFrame()
 
         self.path = os.getcwd()
-        self.directory = self.path + "\\HACScorecardData\\dataFromNHSN\\"
+        self.directory = self.path + "\\HACScorecardData\\"
         self.filename = self.directory + filename
         self.outputFilename = self.path + "\\HACScorecardData\\currentNHSNData"
         
@@ -84,8 +84,6 @@ class calculateHACData:
 
         filteredData["PPTD"] = filteredData["PPTD_NUM"] / filteredData["PPTD_DEN"]
 
-        
-
         filteredData["CUMSUM_NUM3"] = filteredData["Numerator"].rolling(window=3,min_periods=1).sum()
         filteredData["CUMSUM_DEN3"] = filteredData["Denominator"].rolling(window=3,min_periods=1).sum()
         filteredData["Trend_3"] = filteredData["CUMSUM_NUM3"]/filteredData["CUMSUM_DEN3"]
@@ -106,7 +104,8 @@ class calculateHACData:
         
         #filteredData = filteredData.drop(["PPTD_NUM","PPTD_DEN","CUMSUM_NUM3","CUMSUM_DEN3"],axis=1)
         filteredData = filteredData.replace(np.nan,0)
-        
+        filteredData["Date"] = filteredData.index
+
         return filteredData
 
     def runCalculations(self,measures,facilities):
@@ -163,7 +162,7 @@ class calculateHACData:
 
         self.clean_data["Date"] = self.clean_data.index
         
-        self.clean_data = self.clean_data[["Facility","Date","Numerator","Denominator","Units", "Measure"]]
+        self.clean_data = self.clean_data[["Facility","Date","Numerator","Denominator","Units", "Measure","Procedure"]]
     
     # Retrieve and Store data #
     def tryToFindData(self):
@@ -190,6 +189,7 @@ class calculateHACData:
             print("Could not store pickle.\n")
 
     def getDataFromExcel(self):
+        self.raw_data = pd.read_excel(self.filename + ".xlsx")
         try:
             self.raw_data = pd.read_excel(self.filename + ".xlsx")
             self.storeDataToPickle()
@@ -197,7 +197,7 @@ class calculateHACData:
         except:
             print("Could not get data from Excel.\n")
 
-class hacFileManagement:
+class HacFileManagement:
     def __init__(self):
         self.path = os.getcwd()
         self.mainDirectory = self.path + "\\HACScorecardData"
@@ -234,9 +234,9 @@ class hacFileManagement:
             except FileExistsError:
                 print(FileExistsError)
             
-class extractNewHACData(hacFileManagement):
+class ExtractNewHACData(HacFileManagement):
     def __init__(self):
-        hacFileManagement.__init__(self)
+        HacFileManagement.__init__(self)
 
         self.locationCodes = {
             10159: "SV Indianapolis",
@@ -383,14 +383,55 @@ class extractNewHACData(hacFileManagement):
         self.output_data = pd.concat([self.output_data,output],sort=True)
         output = None
 
-class compareFiles:
+class CompareFiles(HacFileManagement):
     def __init__(self, originalFile, newFile):
+        HacFileManagement.__init__(self)
         self.originalFile = originalFile
         self.newFile = newFile
 
+        self.getCompareCollate()
+
+
+    def getHACFile(self,filename):
+        try:
+            hacData = pd.read_excel(self.mainDirectory + filename)
+        except:
+            hacData = pd.DataFrame()
+
+        return hacData
+
+    def filterHACFile(self, hacData):
+        try:
+            hacData = hacData[["Date","Denominator","Facility","Measure","Numerator","Procedure","Units"]]
+        except:
+            print("Error filtering HAC File. ")
+
+        return hacData
+    
+    def compareFile(self,newDataframe,oldDataframe):
+        combinedDataframe = newDataframe.merge(oldDataframe.drop_duplicates(), on=["Date","Facility","Measure","Procedure"],how="left",indicator=True)
+        return combinedDataframe
+
+    def getCompareCollate(self):
+        newDF = self.filterHACFile(self.getHACFile(self.newFile))
+        oldDF = self.filterHACFile(self.getHACFile(self.originalFile))
+
+        if oldDF.empty & newDF.empty:
+            print("Missing both file (Original & New).")
+        elif oldDF.empty:
+            outDF = newDF
+        elif newDF.empty:
+            outDF = oldDF
+        else:
+            outDF = self.compareFile(newDF,oldDF)
+
+        print(outDF)
+
+
+
 def main():
     def getAttributes():
-        filename = "extractedNHSNData7_2019"
+        filename = "currentNHSNData"
         measures = [
             "CAUTI",
             "CLABSI",
@@ -454,17 +495,20 @@ def main():
 
     fn,m,f,ps = getAttributes()
     
-    directory = hacFileManagement() 
-    extract = extractNewHACData()
+    directory = HacFileManagement() 
+    extract = ExtractNewHACData()
+    compare = CompareFiles("\\currentNHSNData.xlsx","\\latestNHSNData.xlsx")
 
-    hac = calculateHACData(fn,ps)
+    hac = CalculateHACData(fn,ps)
     hac.runCalculations(m,f)
     hac.exportDataToExcel()
 
-    directory.moveFiles()
+    return hac
+
+    #directory.moveFiles()
 
 if __name__ == "__main__":
-    main()
+    hac= main()
 
 
 #%%
