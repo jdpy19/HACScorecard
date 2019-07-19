@@ -132,18 +132,18 @@ class receiveHACData:
         temp["Date"] = pd.to_datetime(temp["Date"], errors="coerce")
         temp = temp.set_index(temp["Date"]).sort_index(ascending=True)
         
-        if facility == "All Ministries":
-            temp = temp[(temp.Measure == measure)]
-            temp = temp.groupby([temp.index.year,temp.index.month]).sum()
-            temp.index = temp.index.set_names(["Y", "M"])
-            temp.reset_index(inplace=True)
-            temp["Date"] = pd.to_datetime({"year":temp.Y,"month":temp.M,"day":1}, format="%Y%m%d")
-            temp["Measure"] = measure
-            temp["Facility"] = "All Ministries"
-            temp = temp.set_index("Date",drop=False)
-            temp = temp.drop(["Y","M"],axis=1)
-        else:
-            temp = temp[(temp["Facility"] == facility) & (temp["Measure"] == measure)]
+        # if facility == "All Ministries":
+        #     temp = temp[(temp.Measure == measure)]
+        #     temp = temp.groupby([temp.index.year,temp.index.month]).sum()
+        #     temp.index = temp.index.set_names(["Y", "M"])
+        #     temp.reset_index(inplace=True)
+        #     temp["Date"] = pd.to_datetime({"year":temp.Y,"month":temp.M,"day":1}, format="%Y%m%d")
+        #     temp["Measure"] = measure
+        #     temp["Facility"] = "All Ministries"
+        #     temp = temp.set_index("Date",drop=False)
+        #     temp = temp.drop(["Y","M"],axis=1)
+        # else:
+        temp = temp[(temp["Facility"] == facility) & (temp["Measure"] == measure)]
 
         return temp
 
@@ -397,13 +397,14 @@ def main():
     measures = [
         "CAUTI",
         "CLABSI",
-        "C-Diff",
+        "CDIFF",
         "MRSA",
         "PSI_90: Composite",
         "SSI",
     ]
 
     facilities = [
+        "All Ministries",
         "SV Anderson",
         "SV Evansville",
         "SV Carmel",
@@ -439,7 +440,7 @@ def main():
             "topFive":0.0,
             "bottomFive":2.3715
         },
-        "C-Diff":{
+        "CDIFF":{
             "mean":0.8955,
             "std":0.3915,
             "topFive":0.128,
