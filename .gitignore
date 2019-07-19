@@ -1,0 +1,12 @@
+# Ignore all .xlsx files
+*.xlsx
+
+# Ignore all .pkl files
+*.pkl
+
+# Ignore HACScorecard Data folder
+HACScorecardData
+
+# Ignore all Tableau files
+*.twb
+*.twbr
