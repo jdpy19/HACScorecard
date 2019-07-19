@@ -1,11 +1,10 @@
-"""
-Author: Jake Ditslear
-Company: Navion Healthcare Solutions
+###
+# Author: Jake Ditslear
+# Company: Navion Healthcare Solutions
+# Purpose: Automated processing of HAC data manually queried from NHSN. 
+# Initially created: 7/19/19
+###
 
-Purpose: Automated processing of HAC data manually queried from NHSN. 
-
-Initially created: 7/19/19
-"""
 #%%
 # External Dependencies
 import pandas as pd
@@ -16,8 +15,7 @@ import os
 import shutil
 import datetime as dt
 
-#%%
-class receiveHACData:
+class calculateHACData:
     def __init__(self,filename,popStats):
         
         self.popStats = popStats
@@ -199,7 +197,6 @@ class receiveHACData:
         except:
             print("Could not get data from Excel.\n")
 
-#%%
 class hacFileManagement:
     def __init__(self):
         self.path = os.getcwd()
@@ -236,10 +233,11 @@ class hacFileManagement:
                 shutil.move(self.newDataDirectory + "\\" + f, dst)
             except FileExistsError:
                 print(FileExistsError)
-#%%
-class extractNewHACData:
-    def __init__(self,directory):
-        self.directory = directory
+            
+class extractNewHACData(hacFileManagement):
+    def __init__(self):
+        hacFileManagement.__init__(self)
+
         self.locationCodes = {
             10159: "SV Indianapolis",
             34057: "SV Indianapolis", # Women's Hospital
@@ -271,17 +269,11 @@ class extractNewHACData:
 
     # Ouput Functions
     def storeExcel(self):
-        today = dt.datetime.now()
-        today = str(today.month) + "_" + str(today.year)
-
-        self.output_data.to_excel(self.directory + "\\extractedNHSNData"+ today + ".xlsx")
+        self.output_data.to_excel(self.mainDirectory + "\\latestNHSNData.xlsx") 
     
     def storePickle(self):
-        today = dt.datetime.now()
-        today = str(today.month) + "_" + str(today.year)
-        
         try:
-            self.output_data.to_pickle(self.directory + "\\extractedNHSNData"+ today + ".pkl")
+            self.output_data.to_pickle(self.mainDirectory + "\\latestNHSNData.pkl")
             print("Stored raw data to pickle.\n")
         except:
             print("Could not store pickle.\n")
@@ -289,7 +281,7 @@ class extractNewHACData:
     # Extract Functions
 
     def extractCAUTI(self):
-        cautiDF = pd.read_excel(self.directory + "\\"+ "monthDataCAUTI.xlsx")
+        cautiDF = pd.read_excel(self.newDataDirectory + "\\"+ "monthDataCAUTI.xlsx")
         cautiDF = cautiDF[pd.isnull(cautiDF["locationType"] ) & pd.isnull(cautiDF["loccdc"])]
         
         output = pd.DataFrame()
@@ -305,7 +297,7 @@ class extractNewHACData:
         output = None
 
     def extractCLABSI(self):
-        clabsiDF = pd.read_excel(self.directory + "\\"+ "monthDataCLABSI.xlsx")
+        clabsiDF = pd.read_excel(self.newDataDirectory + "\\"+ "monthDataCLABSI.xlsx")
         clabsiDF = clabsiDF[pd.isnull(clabsiDF["locationType"] ) & pd.isnull(clabsiDF["locCDC"])]
         
         output = pd.DataFrame()
@@ -321,10 +313,10 @@ class extractNewHACData:
         output = None
     
     def extractCDIFF(self):
-        cdiffDF = pd.read_excel(self.directory + "\\"+ "monthDataCDIFF.xlsx")
+        cdiffDF = pd.read_excel(self.newDataDirectory + "\\"+ "monthDataCDIFF.xlsx")
         #cdiffDF = cdiffDF[pd.notna(cdiffDF["orgID"])]
         
-        cdiffQuarterDF = pd.read_excel(self.directory + "\\"+ "quarterDataCDIFF.xlsx")
+        cdiffQuarterDF = pd.read_excel(self.newDataDirectory + "\\"+ "quarterDataCDIFF.xlsx")
         cdiffQuarterDF = cdiffQuarterDF[pd.notna(cdiffQuarterDF["orgID"])]
 
       
@@ -348,10 +340,10 @@ class extractNewHACData:
         output = None
 
     def extractMRSA(self):
-        mrsaDF = pd.read_excel(self.directory + "\\"+ "monthDataMRSA.xlsx")
+        mrsaDF = pd.read_excel(self.newDataDirectory + "\\"+ "monthDataMRSA.xlsx")
         #mrsaDF = mrsaDF[pd.notna(mrsaDF["orgID"])]
         
-        mrsaQuarterDF = pd.read_excel(self.directory + "\\"+ "quarterDataMRSA.xlsx")
+        mrsaQuarterDF = pd.read_excel(self.newDataDirectory + "\\"+ "quarterDataMRSA.xlsx")
         mrsaQuarterDF = mrsaQuarterDF[pd.notna(mrsaQuarterDF["orgID"])]
 
       
@@ -375,7 +367,7 @@ class extractNewHACData:
         output = None
     
     def extractSSI(self):
-        ssiDF = pd.read_excel(self.directory + "\\"+ "monthDataSSI.xlsx")
+        ssiDF = pd.read_excel(self.newDataDirectory + "\\"+ "monthDataSSI.xlsx")
         #ssiDF = ssiDF[pd.notna(ssiDF["orgid"])]
         
         output = pd.DataFrame()
@@ -391,80 +383,88 @@ class extractNewHACData:
         self.output_data = pd.concat([self.output_data,output],sort=True)
         output = None
 
-#%%
+class compareFiles:
+    def __init__(self, originalFile, newFile):
+        self.originalFile = originalFile
+        self.newFile = newFile
+
 def main():
-    filename = "extractedNHSNData7_2019"
-    measures = [
-        "CAUTI",
-        "CLABSI",
-        "CDIFF",
-        "MRSA",
-        "PSI_90: Composite",
-        "SSI",
-    ]
+    def getAttributes():
+        filename = "extractedNHSNData7_2019"
+        measures = [
+            "CAUTI",
+            "CLABSI",
+            "CDIFF",
+            "MRSA",
+            "PSI_90: Composite",
+            "SSI",
+        ]
 
-    facilities = [
-        "All Ministries",
-        "SV Anderson",
-        "SV Evansville",
-        "SV Carmel",
-        "SV Fishers",
-        "SV Heart Center",
-        "SV Indianapolis",
-        "All Ministries",
-        "SV Kokomo"
-    ]
+        facilities = [
+            "All Ministries",
+            "SV Anderson",
+            "SV Evansville",
+            "SV Carmel",
+            "SV Fishers",
+            "SV Heart Center",
+            "SV Indianapolis",
+            "All Ministries",
+            "SV Kokomo"
+        ]
 
-    populationStats = {
-        "PSI_90: Composite":{
-            "mean":0.999,
-            "std":0.1151,
-            "topFive":0.8021,
-            "bottomFive":1.2668
-        },
-        "CLABSI":{
-            "mean":0.8934,
-            "std":0.5913,
-            "topFive":0.0,
-            "bottomFive":2.191
-        },
-        "CAUTI":{
-            "mean":0.9131,
-            "std":0.5986,
-            "topFive":0.0,
-            "bottomFive":2.2
-        },
-        "MRSA":{
-            "mean":0.938,
-            "std":0.6447,
-            "topFive":0.0,
-            "bottomFive":2.3715
-        },
-        "CDIFF":{
-            "mean":0.8955,
-            "std":0.3915,
-            "topFive":0.128,
-            "bottomFive":1.663
-        },
-        "SSI":{
-            "mean":0.8435,
-            "std":0.5827,
-            "topFive":0.0,
-            "bottomFive":2.082
+        populationStats = {
+            "PSI_90: Composite":{
+                "mean":0.999,
+                "std":0.1151,
+                "topFive":0.8021,
+                "bottomFive":1.2668
+            },
+            "CLABSI":{
+                "mean":0.8934,
+                "std":0.5913,
+                "topFive":0.0,
+                "bottomFive":2.191
+            },
+            "CAUTI":{
+                "mean":0.9131,
+                "std":0.5986,
+                "topFive":0.0,
+                "bottomFive":2.2
+            },
+            "MRSA":{
+                "mean":0.938,
+                "std":0.6447,
+                "topFive":0.0,
+                "bottomFive":2.3715
+            },
+            "CDIFF":{
+                "mean":0.8955,
+                "std":0.3915,
+                "topFive":0.128,
+                "bottomFive":1.663
+            },
+            "SSI":{
+                "mean":0.8435,
+                "std":0.5827,
+                "topFive":0.0,
+                "bottomFive":2.082
+            }
         }
-    }
+        return filename,measures,facilities,populationStats
 
-    hac = receiveHACData(filename,populationStats)
-    hac.runCalculations(measures,facilities)
+    fn,m,f,ps = getAttributes()
+    
+    directory = hacFileManagement() 
+    extract = extractNewHACData()
+
+    hac = calculateHACData(fn,ps)
+    hac.runCalculations(m,f)
     hac.exportDataToExcel()
-    return hac
 
-def testFileManagement():
-    test = hacFileManagement()
-    #test.moveFiles()
-    extract = extractNewHACData(test.newDataDirectory)
+    directory.moveFiles()
 
 if __name__ == "__main__":
-    test = testFileManagement()
-    output = main()
+    main()
+
+
 #%%
