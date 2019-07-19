@@ -19,20 +19,24 @@ import datetime as dt
 #%%
 class receiveHACData:
     def __init__(self,filename,popStats):
-        self.filename = filename
+        
         self.popStats = popStats
         
         self.raw_data = pd.DataFrame()
         self.clean_data = pd.DataFrame()
         self.output_data = pd.DataFrame()
 
+        self.path = os.getcwd()
+        self.directory = self.path + "\\HACScorecardData\\dataFromNHSN\\"
+        self.filename = self.directory + filename
+        self.outputFilename = self.path + "\\HACScorecardData\\currentNHSNData"
+        
         self.tryToFindData()
         self.cleanRawData()
-    
-    
+
     # Export Data
     def exportDataToExcel(self):
-        self.output_data.to_excel(self.filename+"_output.xlsx")
+        self.output_data.to_excel(self.outputFilename+".xlsx")
 
     def retrieveExistingOutput(self):
         pass
@@ -42,17 +46,13 @@ class receiveHACData:
 
     # Calculations
     def calcAttributes(self,filteredData,period,measure):
-        filteredData = filteredData.groupby(filteredData["TimeSORT"],as_index=True).agg(
+        filteredData = filteredData.groupby(filteredData["Date"],as_index=True).agg(
             {
                 "Numerator":"sum",
                 "Denominator":"sum",
-                "Units (Pt Days)":"sum",
+                "Units":"sum",
                 "Facility":"first",
                 "Measure":"first",
-                "HAC Target":"last", 
-                "VBP Target":"last",
-                "Anthem Target":"last",
-                "STARP Target":"last"
             }
         )
 
@@ -70,9 +70,9 @@ class receiveHACData:
             filteredData["PPTD_NUM"] = filteredData.groupby(filteredData.FiscalYear.dt.year)["Numerator"].cumsum()
             filteredData["PPTD_DEN"] = filteredData.groupby(filteredData.FiscalYear.dt.year)["Denominator"].cumsum()
 
-            avgDen = filteredData["Denominator"].mean()
-            filteredData["ResidualVBP"] = round((filteredData["VBP Target"]*(filteredData["PPTD_DEN"] + avgDen*(12-filteredData.FiscalYear.dt.month))) - filteredData["PPTD_NUM"],0)
-            filteredData["ProjectedDen"] = round((filteredData["VBP Target"]*(filteredData["PPTD_DEN"] + avgDen*(12-filteredData.FiscalYear.dt.month))),0)
+            #avgDen = filteredData["Denominator"].mean()
+            #filteredData["ResidualVBP"] = round((filteredData["VBP Target"]*(filteredData["PPTD_DEN"] + avgDen*(12-filteredData.FiscalYear.dt.month))) - filteredData["PPTD_NUM"],0)
+            #filteredData["ProjectedDen"] = round((filteredData["VBP Target"]*(filteredData["PPTD_DEN"] + avgDen*(12-filteredData.FiscalYear.dt.month))),0)
 
             filteredData = filteredData.drop(["FiscalYear"],axis=1)
         elif period == "ROLL":
@@ -116,23 +116,11 @@ class receiveHACData:
 
         for facility in facilities:
             for measure in measures:
-                if "SSI" in measure:
-                    x0 = self.queryCleanData(facility, "SSI-COLO")
-                    x1 = self.queryCleanData(facility, "SSI-HYST")
-                    x = pd.concat([x0,x1],sort=True)
-                    x["Measure"] = "SSI"
-                    x = self.calcAttributes(x,"FY",measure)
+                x = self.queryCleanData(facility, measure)
+                x = self.calcAttributes(x,"FY",measure)
 
-                    y = pd.concat([y,x],sort=True)
-                    x = None
-                    x0 = None
-                    x1 = None
-                else: 
-                    x = self.queryCleanData(facility, measure)
-                    x = self.calcAttributes(x,"FY",measure)
-
-                    y = pd.concat([y,x],sort=True)
-                    x = None
+                y = pd.concat([y,x],sort=True)
+                x = None
             
         self.output_data = y
         y = None
@@ -141,18 +129,18 @@ class receiveHACData:
     def queryCleanData(self,facility,measure):
         temp = self.clean_data.copy()
 
-        temp["TimeSORT"] = pd.to_datetime(temp["TimeSORT"], errors="coerce")
-        temp = temp.set_index(temp["TimeSORT"]).sort_index(ascending=True)
+        temp["Date"] = pd.to_datetime(temp["Date"], errors="coerce")
+        temp = temp.set_index(temp["Date"]).sort_index(ascending=True)
         
         if facility == "All Ministries":
             temp = temp[(temp.Measure == measure)]
             temp = temp.groupby([temp.index.year,temp.index.month]).sum()
             temp.index = temp.index.set_names(["Y", "M"])
             temp.reset_index(inplace=True)
-            temp["TimeSORT"] = pd.to_datetime({"year":temp.Y,"month":temp.M,"day":1}, format="%Y%m%d")
+            temp["Date"] = pd.to_datetime({"year":temp.Y,"month":temp.M,"day":1}, format="%Y%m%d")
             temp["Measure"] = measure
             temp["Facility"] = "All Ministries"
-            temp = temp.set_index("TimeSORT",drop=False)
+            temp = temp.set_index("Date",drop=False)
             temp = temp.drop(["Y","M"],axis=1)
         else:
             temp = temp[(temp["Facility"] == facility) & (temp["Measure"] == measure)]
@@ -172,12 +160,12 @@ class receiveHACData:
         self.clean_data["Denominator"] = pd.to_numeric(self.clean_data["Denominator"])
         self.clean_data["Denominator"] = self.clean_data["Denominator"].replace(np.nan,0.0)
         
-        self.clean_data["Units (Pt Days)"] = pd.to_numeric(self.clean_data["Units (Pt Days)"])
-        self.clean_data["Units (Pt Days)"] = self.clean_data["Units (Pt Days)"].replace(np.nan,0.0)
+        self.clean_data["Units"] = pd.to_numeric(self.clean_data["Units"])
+        self.clean_data["Units"] = self.clean_data["Units"].replace(np.nan,0.0)
 
-        self.clean_data["TimeSORT"] = pd.to_datetime(self.clean_data["TimeSORT"])
+        self.clean_data["Date"] = self.clean_data.index
         
-        self.clean_data = self.clean_data[["Facility","Unit","TimeSORT","Numerator","Denominator","Units (Pt Days)", "Measure","HAC Target", "VBP Target","Anthem Target","STARP Target"]]
+        self.clean_data = self.clean_data[["Facility","Date","Numerator","Denominator","Units", "Measure"]]
     
     # Retrieve and Store data #
     def tryToFindData(self):
@@ -188,7 +176,6 @@ class receiveHACData:
         if self.raw_data.empty:
             print("Trying to retrieve Excel Data.")
             self.getDataFromExcel()
-            self.storeDataToPickle()
 
     def getDataFromPickle(self):
         try: 
@@ -207,6 +194,7 @@ class receiveHACData:
     def getDataFromExcel(self):
         try:
             self.raw_data = pd.read_excel(self.filename + ".xlsx")
+            self.storeDataToPickle()
             print("Retrieved data from Excel.")
         except:
             print("Could not get data from Excel.\n")
@@ -215,9 +203,9 @@ class receiveHACData:
 class hacFileManagement:
     def __init__(self):
         self.path = os.getcwd()
-        self.mainDirectory = self.path + "\HACScorecardData"
-        self.newDataDirectory = self.mainDirectory + "\dataFromNHSN"
-        self.processedDataDirectory = self.mainDirectory + "\processedData"
+        self.mainDirectory = self.path + "\\HACScorecardData"
+        self.newDataDirectory = self.mainDirectory + "\\dataFromNHSN"
+        self.processedDataDirectory = self.mainDirectory + "\\processedData"
     
         self.checkDirectory(self.mainDirectory)
         self.checkDirectory(self.newDataDirectory)
@@ -286,14 +274,14 @@ class extractNewHACData:
         today = dt.datetime.now()
         today = str(today.month) + "_" + str(today.year)
 
-        self.output_data.to_excel(self.directory + "\\exctractedNHSNData"+ today + ".xlsx")
+        self.output_data.to_excel(self.directory + "\\extractedNHSNData"+ today + ".xlsx")
     
     def storePickle(self):
         today = dt.datetime.now()
         today = str(today.month) + "_" + str(today.year)
         
         try:
-            self.output_data.to_pickle(self.directory + "\\exctractedNHSNData"+ today + ".pkl")
+            self.output_data.to_pickle(self.directory + "\\extractedNHSNData"+ today + ".pkl")
             print("Stored raw data to pickle.\n")
         except:
             print("Could not store pickle.\n")
@@ -305,7 +293,7 @@ class extractNewHACData:
         cautiDF = cautiDF[pd.isnull(cautiDF["locationType"] ) & pd.isnull(cautiDF["loccdc"])]
         
         output = pd.DataFrame()
-        output["Date"] = pd.to_datetime(cautiDF["Unnamed: 0"],format="%YM%m",errors="coerce")
+        output["Date"] = pd.to_datetime(cautiDF["summaryYM"],format="%YM%m",errors="coerce")
         output["Numerator"] = cautiDF["infCount"]
         output["Denominator"] = cautiDF["numPred"]
         output["Units"] = cautiDF["numucathdays"]
@@ -405,7 +393,7 @@ class extractNewHACData:
 
 #%%
 def main():
-    filename = "hacSourceDataJune"
+    filename = "extractedNHSNData7_2019"
     measures = [
         "CAUTI",
         "CLABSI",
@@ -473,11 +461,9 @@ def main():
 def testFileManagement():
     test = hacFileManagement()
     #test.moveFiles()
-
     extract = extractNewHACData(test.newDataDirectory)
 
 if __name__ == "__main__":
-    #output = main()
     test = testFileManagement()
-    
+    output = main()
 #%%
