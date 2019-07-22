@@ -12,6 +12,7 @@ import numpy as np
 import pickle
 import scipy.stats as st
 import os
+from os.path import join
 import sys
 import shutil
 import datetime as dt
@@ -19,9 +20,9 @@ import datetime as dt
 class HacFileManagement:
     def __init__(self):
         self.path = os.getcwd()
-        self.mainDirectory = self.path + "\\HACScorecardData"
-        self.newDataDirectory = self.mainDirectory + "\\dataFromNHSN"
-        self.processedDataDirectory = self.mainDirectory + "\\processedData"
+        self.mainDirectory = join(self.path,"HACScorecardData")
+        self.newDataDirectory = join(self.mainDirectory, "dataFromNHSN")
+        self.processedDataDirectory = join(self.mainDirectory,"processedData")
     
         self.checkDirectory(self.mainDirectory)
         self.checkDirectory(self.newDataDirectory)
@@ -42,7 +43,7 @@ class HacFileManagement:
     def createMonthDir(self):
         today = dt.datetime.now()
         today = str(today.month) + "_" + str(today.year)
-        monthDir = self.processedDataDirectory + "\\" + today
+        monthDir = join(self.processedDataDirectory,today)
         
         self.checkDirectory(monthDir)
 
@@ -54,7 +55,7 @@ class HacFileManagement:
 
         for f in files:
             try:
-                shutil.move(self.newDataDirectory + "\\" + f, dst)
+                shutil.move(join(self.newDataDirectory,f), dst)
             except FileExistsError:
                 print(FileExistsError)
     
@@ -62,7 +63,7 @@ class HacFileManagement:
     def exportToExcel(self,dataframe,path,filename):
         try:
             print("Exporting {} to  Excel...".format(filename))
-            dataframe.to_excel(path + "\\" + filename + ".xlsx")
+            dataframe.to_excel(join(path,filename + ".xlsx"))
         except:
             print("Failure.")
         else: 
@@ -71,7 +72,7 @@ class HacFileManagement:
     def exportToPickle(self,dataframe,path,filename):
         try:
             print("Exporting {} to Pickle...".format(filename))
-            dataframe.to_pickle(path + "\\" + filename + ".pkl")
+            dataframe.to_pickle(join(path,filename + ".pkl"))
         except:
             print("Failure.")
         else: 
@@ -83,7 +84,7 @@ class HacFileManagement:
 
         try:
             print("Importing {} from Excel...".format(filename,path))
-            dataframe = pd.read_excel(path + "\\" + filename + ".xlsx")
+            dataframe = pd.read_excel(join(path,filename + ".xlsx"))
         except:
             print("Failure.")
         else: 
@@ -96,7 +97,7 @@ class HacFileManagement:
         
         try:
             print("Importing {} from Pickle...".format(filename,path))
-            dataframe = pd.read_pickle(path + "\\" + filename + ".pkl")
+            dataframe = pd.read_pickle(join(path,filename + ".pkl"))
         except:
             print("Failure.")
         else: 
@@ -310,7 +311,7 @@ class ExtractNewHACData(HacFileManagement):
 
     # Extract Functions
     def extractCAUTI(self):
-        cautiDF = pd.read_excel(self.newDataDirectory + "\\"+ "monthDataCAUTI.xlsx")
+        cautiDF = self.importFromExcel(self.newDataDirectory,"monthDataCAUTI")
         cautiDF = cautiDF[pd.isnull(cautiDF["locationType"] ) & pd.isnull(cautiDF["loccdc"])]
         
         output = pd.DataFrame()
@@ -326,7 +327,7 @@ class ExtractNewHACData(HacFileManagement):
         output = None
 
     def extractCLABSI(self):
-        clabsiDF = pd.read_excel(self.newDataDirectory + "\\"+ "monthDataCLABSI.xlsx")
+        clabsiDF = self.importFromExcel(self.newDataDirectory,"monthDataCLABSI")
         clabsiDF = clabsiDF[pd.isnull(clabsiDF["locationType"] ) & pd.isnull(clabsiDF["locCDC"])]
         
         output = pd.DataFrame()
@@ -342,10 +343,10 @@ class ExtractNewHACData(HacFileManagement):
         output = None
     
     def extractCDIFF(self):
-        cdiffDF = pd.read_excel(self.newDataDirectory + "\\"+ "monthDataCDIFF.xlsx")
+        cdiffDF = self.importFromExcel(self.newDataDirectory,"monthDataCDIFF")
         #cdiffDF = cdiffDF[pd.notna(cdiffDF["orgID"])]
         
-        cdiffQuarterDF = pd.read_excel(self.newDataDirectory + "\\"+ "quarterDataCDIFF.xlsx")
+        cdiffQuarterDF = self.importFromExcel(self.newDataDirectory,"quarterDataCDIFF")
         cdiffQuarterDF = cdiffQuarterDF[pd.notna(cdiffQuarterDF["orgID"])]
 
         output = pd.DataFrame()
@@ -368,10 +369,10 @@ class ExtractNewHACData(HacFileManagement):
         output = None
 
     def extractMRSA(self):
-        mrsaDF = pd.read_excel(self.newDataDirectory + "\\"+ "monthDataMRSA.xlsx")
+        mrsaDF = self.importFromExcel(self.newDataDirectory,"monthDataMRSA")
         #mrsaDF = mrsaDF[pd.notna(mrsaDF["orgID"])]
         
-        mrsaQuarterDF = pd.read_excel(self.newDataDirectory + "\\"+ "quarterDataMRSA.xlsx")
+        mrsaQuarterDF = self.importFromExcel(self.newDataDirectory,"quarterDataMRSA")
         mrsaQuarterDF = mrsaQuarterDF[pd.notna(mrsaQuarterDF["orgID"])]
 
       
@@ -395,7 +396,7 @@ class ExtractNewHACData(HacFileManagement):
         output = None
     
     def extractSSI(self):
-        ssiDF = pd.read_excel(self.newDataDirectory + "\\"+ "monthDataSSI.xlsx")
+        ssiDF = self.importFromExcel(self.newDataDirectory, "monthDataSSI")
         #ssiDF = ssiDF[pd.notna(ssiDF["orgid"])]
         
         output = pd.DataFrame()
