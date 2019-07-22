@@ -12,6 +12,7 @@ import numpy as np
 import pickle
 import scipy.stats as st
 import os
+import sys
 import shutil
 import datetime as dt
 
@@ -36,7 +37,7 @@ class HacFileManagement:
         try:
             os.makedirs(directory)
         except FileExistsError:
-            print(directory, FileExistsError)
+            print("Directory already exists, did not create new folder.")
 
     def createMonthDir(self):
         today = dt.datetime.now()
@@ -60,7 +61,7 @@ class HacFileManagement:
     # Export functions
     def exportToExcel(self,dataframe,path,filename):
         try:
-            print("Exporting {} to {} ...".format(filename,path))
+            print("Exporting {} to  Excel...".format(filename))
             dataframe.to_excel(path + "\\" + filename + ".xlsx")
         except:
             print("Failure.")
@@ -69,8 +70,8 @@ class HacFileManagement:
 
     def exportToPickle(self,dataframe,path,filename):
         try:
-            print("Exporting {} to {} ...".format(filename,path))
-            dataframe.to_pickle(path + "\\" + filename + ".xlsx")
+            print("Exporting {} to Pickle...".format(filename))
+            dataframe.to_pickle(path + "\\" + filename + ".pkl")
         except:
             print("Failure.")
         else: 
@@ -81,7 +82,7 @@ class HacFileManagement:
         dataframe = pd.DataFrame()
 
         try:
-            print("Importing {} from {} ...".format(filename,path))
+            print("Importing {} from Excel...".format(filename,path))
             dataframe = pd.read_excel(path + "\\" + filename + ".xlsx")
         except:
             print("Failure.")
@@ -94,8 +95,8 @@ class HacFileManagement:
         dataframe = pd.DataFrame()
         
         try:
-            print("Importing {} from {} ...".format(filename,path))
-            dataframe = pd.read_pickle(path + "\\" + filename + ".xlsx")
+            print("Importing {} from Pickle...".format(filename,path))
+            dataframe = pd.read_pickle(path + "\\" + filename + ".pkl")
         except:
             print("Failure.")
         else: 
@@ -187,7 +188,7 @@ class CalculateHACData(HacFileManagement):
 
     def runCalculations(self,measures,facilities):
         y = pd.DataFrame()
-
+        x = pd.DataFrame()
         for facility in facilities:
             for measure in measures:
                 if measure == "SSI":
@@ -229,8 +230,10 @@ class CalculateHACData(HacFileManagement):
         #     temp = temp.set_index("Date",drop=False)
         #     temp = temp.drop(["Y","M"],axis=1)
         # else:
+
         def createMask(facility, measure, procedure):
             if procedure:
+                
                 mask = (temp["Facility"] == facility) & (temp["Measure"] == measure) & (temp["Procedure"] == procedure)
             else:
                 mask = (temp["Facility"] == facility) & (temp["Measure"] == measure)
@@ -242,8 +245,7 @@ class CalculateHACData(HacFileManagement):
         return temp
 
     def cleanRawData(self):
-        print("========== Raw Data ==========\n")
-        print(self.raw_data)
+
         self.clean_data = self.raw_data.copy()
         self.clean_data["Facility"] = self.clean_data["Facility"].replace(np.nan,"None")
 
@@ -271,10 +273,6 @@ class CalculateHACData(HacFileManagement):
         if self.raw_data.empty:
             print("Trying to retrieve Excel Data.")
             self.raw_data = self.importFromExcel(self.mainDirectory,self.currentDataFile)
-
-        print(self.raw_data)
-
-
 
             
 class ExtractNewHACData(HacFileManagement):
@@ -433,8 +431,9 @@ class CompareFiles(HacFileManagement):
     def getCompareCollate(self):
         newDF = self.filterHACFile(self.importFromExcel(self.mainDirectory,self.newDatafile))
         oldDF = self.filterHACFile(self.importFromExcel(self.mainDirectory,self.currentDataFile))
+        outDF = pd.DataFrame()
 
-        if oldDF.empty & newDF.empty:
+        if (oldDF.empty) & (newDF.empty):
             print("Missing both files (Original & New).")
         elif oldDF.empty:
             outDF = newDF
@@ -444,8 +443,9 @@ class CompareFiles(HacFileManagement):
             print("New file does not exist.")
         else:
             outDF = self.compareFile(newDF,oldDF)
-
         
+        self.exportToExcel(outDF,self.mainDirectory,self.currentDataFile)
+        self.exportToPickle(outDF,self.mainDirectory,self.currentDataFile)
 
 def main():
     def getAttributes():
