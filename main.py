@@ -15,8 +15,96 @@ import os
 import shutil
 import datetime as dt
 
+class HacFileManagement:
+    def __init__(self):
+        self.path = os.getcwd()
+        self.mainDirectory = self.path + "\\HACScorecardData"
+        self.newDataDirectory = self.mainDirectory + "\\dataFromNHSN"
+        self.processedDataDirectory = self.mainDirectory + "\\processedData"
+    
+        self.checkDirectory(self.mainDirectory)
+        self.checkDirectory(self.newDataDirectory)
+        self.checkDirectory(self.processedDataDirectory)
+
+        self.newDatafile = "latestNHSNData"
+        self.currentDataFile = "currentNHSNData"
+
+        return super().__init__()
+    
+    # Directory management functions
+    def checkDirectory(self,directory):
+        try:
+            os.makedirs(directory)
+        except FileExistsError:
+            print(directory, FileExistsError)
+
+    def createMonthDir(self):
+        today = dt.datetime.now()
+        today = str(today.month) + "_" + str(today.year)
+        monthDir = self.processedDataDirectory + "\\" + today
+        
+        self.checkDirectory(monthDir)
+
+        return monthDir
+
+    def moveFiles(self):
+        files = os.listdir(self.newDataDirectory)
+        dst = self.createMonthDir()
+
+        for f in files:
+            try:
+                shutil.move(self.newDataDirectory + "\\" + f, dst)
+            except FileExistsError:
+                print(FileExistsError)
+    
+    # Export functions
+    def exportToExcel(self,dataframe,path,filename):
+        try:
+            print("Exporting {} to {} ...".format(filename,path))
+            dataframe.to_excel(path + "\\" + filename + ".xlsx")
+        except:
+            print("Failure.")
+        else: 
+            print("Success!")
+
+    def exportToPickle(self,dataframe,path,filename):
+        try:
+            print("Exporting {} to {} ...".format(filename,path))
+            dataframe.to_pickle(path + "\\" + filename + ".xlsx")
+        except:
+            print("Failure.")
+        else: 
+            print("Success!")
+
+    # Import functions
+    def importFromExcel(self,path,filename):
+        dataframe = pd.DataFrame()
+
+        try:
+            print("Importing {} from {} ...".format(filename,path))
+            dataframe = pd.read_excel(path + "\\" + filename + ".xlsx")
+        except:
+            print("Failure.")
+        else: 
+            print("Success!")
+        
+        return dataframe
+
+    def importFromPickle(self,path,filename):
+        dataframe = pd.DataFrame()
+        
+        try:
+            print("Importing {} from {} ...".format(filename,path))
+            dataframe = pd.read_pickle(path + "\\" + filename + ".xlsx")
+        except:
+            print("Failure.")
+        else: 
+            print("Success!")
+        
+        return dataframe
+
 class CalculateHACData(HacFileManagement):
-    def __init__(self,filename,popStats,facilities,measures):
+    def __init__(self,popStats,facilities,measures):
         super().__init__()
 
         self.popStats = popStats
@@ -27,15 +115,9 @@ class CalculateHACData(HacFileManagement):
         self.clean_data = pd.DataFrame()
         self.output_data = pd.DataFrame()
 
-        self.path = os.getcwd()
-        self.directory = self.path + "\\HACScorecardData\\"
-        self.filename = self.directory + filename
-        self.outputFilename = "\\HACScorecardData\\currentNHSNData"
-        
         self.tryToFindData()
         self.cleanRawData()
         self.runCalculations(self.facilities,self.measures)
-        HacFileManagement.exportToExcel(self.output_data,self.path,self.filename)
 
     # Calculations
     def calcAttributes(self,filteredData,period,measure,procedure):
@@ -107,7 +189,6 @@ class CalculateHACData(HacFileManagement):
         y = pd.DataFrame()
 
         for facility in facilities:
-            print(facility)
             for measure in measures:
                 if measure == "SSI":
                     procedures = [False, "COLO","HYST"]
@@ -128,8 +209,7 @@ class CalculateHACData(HacFileManagement):
         self.output_data = y
         y = None
 
-        print("========== Output Data ==========\n")
-        print(self.output_data)
+        self.exportToExcel(self.output_data,self.mainDirectory,self.currentDataFile)
 
     # Cleaning
     def queryCleanData(self,facility,measure,procedure):
@@ -181,102 +261,25 @@ class CalculateHACData(HacFileManagement):
         self.clean_data["Date"] = self.clean_data["Date"]
         
         self.clean_data = self.clean_data[["Facility","Date","Numerator","Denominator","Units", "Measure","Procedure"]]
-        print("========== Clean Data ==========\n")
-        print(self.clean_data)
 
     # Retrieve and Store data #
     def tryToFindData(self):
         if self.raw_data.empty:
             print("Trying to retrieve pickle.")
-            self.importFromPickle(self.raw_data,self.mainDirectory,self.currentDataFile)
+            self.raw_data = self.importFromPickle(self.mainDirectory,self.currentDataFile)
         
         if self.raw_data.empty:
             print("Trying to retrieve Excel Data.")
-            self.importFromExcel(self.raw_data,self.mainDirectory,self.currentDataFile)
+            self.raw_data = self.importFromExcel(self.mainDirectory,self.currentDataFile)
 
-class HacFileManagement:
-    def __init__(self):
-        self.path = os.getcwd()
-        self.mainDirectory = self.path + "\\HACScorecardData"
-        self.newDataDirectory = self.mainDirectory + "\\dataFromNHSN"
-        self.processedDataDirectory = self.mainDirectory + "\\processedData"
-    
-        self.checkDirectory(self.mainDirectory)
-        self.checkDirectory(self.newDataDirectory)
-        self.checkDirectory(self.processedDataDirectory)
+        print(self.raw_data)
 
-        self.newDatafile = "latestNHSNData"
-        self.currentDataFile = "currentNHSNData"
-    
-    # Directory management functions
-    def checkDirectory(self,directory):
-        try:
-            os.makedirs(directory)
-        except FileExistsError:
-            print(FileExistsError)
 
-    def createMonthDir(self):
-        today = dt.datetime.now()
-        today = str(today.month) + "_" + str(today.year)
-        monthDir = self.processedDataDirectory + "\\" + today
-        
-        self.checkDirectory(monthDir)
-
-        return monthDir
-
-    def moveFiles(self):
-        files = os.listdir(self.newDataDirectory)
-        dst = self.createMonthDir()
-
-        for f in files:
-            try:
-                shutil.move(self.newDataDirectory + "\\" + f, dst)
-            except FileExistsError:
-                print(FileExistsError)
-    
-    # Export functions
-    def exportToExcel(dataframe,path,filename):
-        try:
-            print("Exporting {} to {} ...".format(filename,path))
-            dataframe.to_excel(path + "\\" + filename + ".xlsx")
-        except:
-            print("Failure.")
-        else: 
-            print("Success!")
-
-    def exportToPickle(dataframe,path,filename):
-        try:
-            print("Exporting {} to {} ...".format(filename,path))
-            dataframe.to_pickle(path + "\\" + filename + ".xlsx")
-        except:
-            print("Failure.")
-        else: 
-            print("Success!")
-
-    # Import functions
-    def importFromExcel(dataframe,path,filename):
-        try:
-            print("Importing {} from {} ...".format(filename,path))
-            dataframe = pd.read_excel(path + "\\" + filename + ".xlsx")
-        except:
-            print("Failure.")
-        else: 
-            print("Success!")
-
-    def importFromPickle(dataframe,path,filename):
-        try:
-            print("Importing {} from {} ...".format(filename,path))
-            dataframe = pd.read_pickle(path + "\\" + filename + ".xlsx")
-        except:
-            print("Failure.")
-        else: 
-            print("Success!")
 
             
 class ExtractNewHACData(HacFileManagement):
     def __init__(self):
-        super().__init__(self)
-        self.filename = "latestNHSNData"
+        super().__init__()
 
         self.locationCodes = {
             10159: "SV Indianapolis",
@@ -304,8 +307,8 @@ class ExtractNewHACData(HacFileManagement):
         self.extractMRSA()
         self.extractSSI()
 
-        HacFileManagement.exportToExcel(self.output_data,self.mainDirectory,self.filename)
-        HacFileManagement.exportToPickle(self.output_data,self.mainDirectory,self.filename)
+        self.exportToExcel(self.output_data,self.mainDirectory,self.newDatafile)
+        self.exportToPickle(self.output_data,self.mainDirectory,self.newDatafile)
 
     # Extract Functions
     def extractCAUTI(self):
@@ -411,21 +414,9 @@ class ExtractNewHACData(HacFileManagement):
         output = None
 
 class CompareFiles(HacFileManagement):
-    def __init__(self, originalFile, newFile):
-        super().__init__(self)
-        self.originalFile = originalFile
-        self.newFile = newFile
-
+    def __init__(self):
+        super().__init__()
         self.getCompareCollate()
-
-
-    def getHACFile(self,filename):
-        try:
-            hacData = pd.read_excel(self.mainDirectory + filename)
-        except:
-            hacData = pd.DataFrame()
-
-        return hacData
 
     def filterHACFile(self, hacData):
         try:
@@ -440,8 +431,8 @@ class CompareFiles(HacFileManagement):
         return combinedDataframe
 
     def getCompareCollate(self):
-        newDF = self.filterHACFile(self.getHACFile(self.newFile))
-        oldDF = self.filterHACFile(self.getHACFile(self.originalFile))
+        newDF = self.filterHACFile(self.importFromExcel(self.mainDirectory,self.newDatafile))
+        oldDF = self.filterHACFile(self.importFromExcel(self.mainDirectory,self.currentDataFile))
 
         if oldDF.empty & newDF.empty:
             print("Missing both files (Original & New).")
@@ -458,7 +449,6 @@ class CompareFiles(HacFileManagement):
 
 def main():
     def getAttributes():
-        filename = "currentNHSNData"
         measures = [
             "CAUTI",
             "CLABSI",
@@ -518,15 +508,15 @@ def main():
                 "bottomFive":2.082
             }
         }
-        return filename,measures,facilities,populationStats
+        return measures,facilities,populationStats
 
-    fn,m,f,ps = getAttributes()
+    m,f,ps = getAttributes()
     
-    directory = HacFileManagement() 
+    directory = HacFileManagement()
     extract = ExtractNewHACData()
-    compare = CompareFiles("\\currentNHSNData.xlsx","\\latestNHSNData.xlsx")
+    compare = CompareFiles()
 
-    hac = CalculateHACData(fn,ps,m,f)
+    hac = CalculateHACData(ps,m,f)
 
     return hac
 
