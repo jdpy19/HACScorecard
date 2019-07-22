@@ -15,10 +15,13 @@ import os
 import shutil
 import datetime as dt
 
-class CalculateHACData:
-    def __init__(self,filename,popStats):
-        
+class CalculateHACData(HacFileManagement):
+    def __init__(self,filename,popStats,facilities,measures):
+        super().__init__()
+
         self.popStats = popStats
+        self.facilities = facilities
+        self.measures = measures
         
         self.raw_data = pd.DataFrame()
         self.clean_data = pd.DataFrame()
@@ -27,23 +30,15 @@ class CalculateHACData:
         self.path = os.getcwd()
         self.directory = self.path + "\\HACScorecardData\\"
         self.filename = self.directory + filename
-        self.outputFilename = self.path + "\\HACScorecardData\\currentNHSNData"
+        self.outputFilename = "\\HACScorecardData\\currentNHSNData"
         
         self.tryToFindData()
         self.cleanRawData()
-
-    # Export Data
-    def exportDataToExcel(self):
-        self.output_data.to_excel(self.outputFilename+".xlsx")
-
-    def retrieveExistingOutput(self):
-        pass
-
-    def replaceExistingWithNewData(self):
-        pass
+        self.runCalculations(self.facilities,self.measures)
+        HacFileManagement.exportToExcel(self.output_data,self.path,self.filename)
 
     # Calculations
-    def calcAttributes(self,filteredData,period,measure):
+    def calcAttributes(self,filteredData,period,measure,procedure):
         filteredData = filteredData.groupby(filteredData["Date"],as_index=True).agg(
             {
                 "Numerator":"sum",
@@ -56,7 +51,7 @@ class CalculateHACData:
 
         filteredData["Score"] =  filteredData["Numerator"] / filteredData["Denominator"]
         filteredData["Score"] = filteredData["Score"].replace(np.inf,0)
-
+        filteredData["Procedure"] = procedure
         filteredData["PPTD_NUM"] = 0.0
         filteredData["PPTD_DEN"] = -1.0
 
@@ -103,7 +98,7 @@ class CalculateHACData:
        
         
         #filteredData = filteredData.drop(["PPTD_NUM","PPTD_DEN","CUMSUM_NUM3","CUMSUM_DEN3"],axis=1)
-        filteredData = filteredData.replace(np.nan,0)
+        #filteredData = filteredData.replace(np.nan,0)
         filteredData["Date"] = filteredData.index
 
         return filteredData
@@ -112,18 +107,32 @@ class CalculateHACData:
         y = pd.DataFrame()
 
         for facility in facilities:
+            print(facility)
             for measure in measures:
-                x = self.queryCleanData(facility, measure)
-                x = self.calcAttributes(x,"FY",measure)
+                if measure == "SSI":
+                    procedures = [False, "COLO","HYST"]
+                    for procedure in procedures:
+                        x = self.queryCleanData(facility, measure, procedure)
+                        x = self.calcAttributes(x,"FY",measure,procedure)
 
-                y = pd.concat([y,x],sort=True)
-                x = None
+                        y = pd.concat([y,x],sort=True)
+                        x = None
+                else:
+                    procedure = False
+                    x = self.queryCleanData(facility, measure, procedure)
+                    x = self.calcAttributes(x,"FY",measure,procedure)
+
+                    y = pd.concat([y,x],sort=True)
+                    x = None
             
         self.output_data = y
         y = None
 
+        print("========== Output Data ==========\n")
+        print(self.output_data)
+
     # Cleaning
-    def queryCleanData(self,facility,measure):
+    def queryCleanData(self,facility,measure,procedure):
         temp = self.clean_data.copy()
 
         temp["Date"] = pd.to_datetime(temp["Date"], errors="coerce")
@@ -140,15 +149,24 @@ class CalculateHACData:
         #     temp = temp.set_index("Date",drop=False)
         #     temp = temp.drop(["Y","M"],axis=1)
         # else:
-        temp = temp[(temp["Facility"] == facility) & (temp["Measure"] == measure)]
+        def createMask(facility, measure, procedure):
+            if procedure:
+                mask = (temp["Facility"] == facility) & (temp["Measure"] == measure) & (temp["Procedure"] == procedure)
+            else:
+                mask = (temp["Facility"] == facility) & (temp["Measure"] == measure)
+
+            return mask
+
+        temp = temp[createMask(facility,measure,procedure)]
 
         return temp
 
     def cleanRawData(self):
+        print("========== Raw Data ==========\n")
+        print(self.raw_data)
         self.clean_data = self.raw_data.copy()
         self.clean_data["Facility"] = self.clean_data["Facility"].replace(np.nan,"None")
 
-        self.clean_data = self.clean_data[self.clean_data["Facility"] != "All Ministries"]
         self.clean_data = self.clean_data[self.clean_data["Facility"] != "None"]
         
         self.clean_data["Numerator"] = pd.to_numeric(self.clean_data["Numerator"])
@@ -160,42 +178,21 @@ class CalculateHACData:
         self.clean_data["Units"] = pd.to_numeric(self.clean_data["Units"])
         self.clean_data["Units"] = self.clean_data["Units"].replace(np.nan,0.0)
 
-        self.clean_data["Date"] = self.clean_data.index
+        self.clean_data["Date"] = self.clean_data["Date"]
         
         self.clean_data = self.clean_data[["Facility","Date","Numerator","Denominator","Units", "Measure","Procedure"]]
-    
+        print("========== Clean Data ==========\n")
+        print(self.clean_data)
+
     # Retrieve and Store data #
     def tryToFindData(self):
         if self.raw_data.empty:
             print("Trying to retrieve pickle.")
-            self.getDataFromPickle()
+            self.importFromPickle(self.raw_data,self.mainDirectory,self.currentDataFile)
         
         if self.raw_data.empty:
             print("Trying to retrieve Excel Data.")
-            self.getDataFromExcel()
-
-    def getDataFromPickle(self):
-        try: 
-            self.raw_data = pd.read_pickle(self.filename + ".pkl")
-            print("Retrieved data from pickle.\n")
-        except: 
-            print("Could not find pickle.\n")
-    
-    def storeDataToPickle(self):
-        try:
-            self.raw_data.to_pickle(self.filename + ".pkl")
-            print("Stored raw data to pickle.\n")
-        except:
-            print("Could not store pickle.\n")
-
-    def getDataFromExcel(self):
-        self.raw_data = pd.read_excel(self.filename + ".xlsx")
-        try:
-            self.raw_data = pd.read_excel(self.filename + ".xlsx")
-            self.storeDataToPickle()
-            print("Retrieved data from Excel.")
-        except:
-            print("Could not get data from Excel.\n")
+            self.importFromExcel(self.raw_data,self.mainDirectory,self.currentDataFile)
 
 class HacFileManagement:
     def __init__(self):
@@ -207,8 +204,11 @@ class HacFileManagement:
         self.checkDirectory(self.mainDirectory)
         self.checkDirectory(self.newDataDirectory)
         self.checkDirectory(self.processedDataDirectory)
+
+        self.newDatafile = "latestNHSNData"
+        self.currentDataFile = "currentNHSNData"
     
-    # Functions
+    # Directory management functions
     def checkDirectory(self,directory):
         try:
             os.makedirs(directory)
@@ -233,10 +233,50 @@ class HacFileManagement:
                 shutil.move(self.newDataDirectory + "\\" + f, dst)
             except FileExistsError:
                 print(FileExistsError)
+    
+    # Export functions
+    def exportToExcel(dataframe,path,filename):
+        try:
+            print("Exporting {} to {} ...".format(filename,path))
+            dataframe.to_excel(path + "\\" + filename + ".xlsx")
+        except:
+            print("Failure.")
+        else: 
+            print("Success!")
+
+    def exportToPickle(dataframe,path,filename):
+        try:
+            print("Exporting {} to {} ...".format(filename,path))
+            dataframe.to_pickle(path + "\\" + filename + ".xlsx")
+        except:
+            print("Failure.")
+        else: 
+            print("Success!")
+
+    # Import functions
+    def importFromExcel(dataframe,path,filename):
+        try:
+            print("Importing {} from {} ...".format(filename,path))
+            dataframe = pd.read_excel(path + "\\" + filename + ".xlsx")
+        except:
+            print("Failure.")
+        else: 
+            print("Success!")
+
+    def importFromPickle(dataframe,path,filename):
+        try:
+            print("Importing {} from {} ...".format(filename,path))
+            dataframe = pd.read_pickle(path + "\\" + filename + ".xlsx")
+        except:
+            print("Failure.")
+        else: 
+            print("Success!")
+
             
 class ExtractNewHACData(HacFileManagement):
     def __init__(self):
-        HacFileManagement.__init__(self)
+        super().__init__(self)
+        self.filename = "latestNHSNData"
 
         self.locationCodes = {
             10159: "SV Indianapolis",
@@ -264,22 +304,10 @@ class ExtractNewHACData(HacFileManagement):
         self.extractMRSA()
         self.extractSSI()
 
-        self.storeExcel()
-        self.storePickle()
-
-    # Ouput Functions
-    def storeExcel(self):
-        self.output_data.to_excel(self.mainDirectory + "\\latestNHSNData.xlsx") 
-    
-    def storePickle(self):
-        try:
-            self.output_data.to_pickle(self.mainDirectory + "\\latestNHSNData.pkl")
-            print("Stored raw data to pickle.\n")
-        except:
-            print("Could not store pickle.\n")
+        HacFileManagement.exportToExcel(self.output_data,self.mainDirectory,self.filename)
+        HacFileManagement.exportToPickle(self.output_data,self.mainDirectory,self.filename)
 
     # Extract Functions
-
     def extractCAUTI(self):
         cautiDF = pd.read_excel(self.newDataDirectory + "\\"+ "monthDataCAUTI.xlsx")
         cautiDF = cautiDF[pd.isnull(cautiDF["locationType"] ) & pd.isnull(cautiDF["loccdc"])]
@@ -319,7 +347,6 @@ class ExtractNewHACData(HacFileManagement):
         cdiffQuarterDF = pd.read_excel(self.newDataDirectory + "\\"+ "quarterDataCDIFF.xlsx")
         cdiffQuarterDF = cdiffQuarterDF[pd.notna(cdiffQuarterDF["orgID"])]
 
-      
         output = pd.DataFrame()
         output["Date"] = pd.to_datetime(cdiffDF["summaryYM"],format="%YM%m",errors="coerce")
         output["summaryYQ"] = output.apply(lambda row: str(row["Date"].year) + "Q" + str(row["Date"].quarter),axis=1)
@@ -385,7 +412,7 @@ class ExtractNewHACData(HacFileManagement):
 
 class CompareFiles(HacFileManagement):
     def __init__(self, originalFile, newFile):
-        HacFileManagement.__init__(self)
+        super().__init__(self)
         self.originalFile = originalFile
         self.newFile = newFile
 
@@ -409,7 +436,7 @@ class CompareFiles(HacFileManagement):
         return hacData
     
     def compareFile(self,newDataframe,oldDataframe):
-        combinedDataframe = newDataframe.merge(oldDataframe.drop_duplicates(), on=["Date","Facility","Measure","Procedure"],how="left",indicator=True)
+        combinedDataframe = pd.concat([newDataframe,oldDataframe],axis=0,ignore_index=True, join="outer").drop_duplicates(subset=["Date","Facility","Measure","Procedure"]).reset_index()
         return combinedDataframe
 
     def getCompareCollate(self):
@@ -417,17 +444,17 @@ class CompareFiles(HacFileManagement):
         oldDF = self.filterHACFile(self.getHACFile(self.originalFile))
 
         if oldDF.empty & newDF.empty:
-            print("Missing both file (Original & New).")
+            print("Missing both files (Original & New).")
         elif oldDF.empty:
             outDF = newDF
+            print("Original file does not exist.")
         elif newDF.empty:
             outDF = oldDF
+            print("New file does not exist.")
         else:
             outDF = self.compareFile(newDF,oldDF)
 
-        print(outDF)
-
-
+        
 
 def main():
     def getAttributes():
@@ -499,9 +526,7 @@ def main():
     extract = ExtractNewHACData()
     compare = CompareFiles("\\currentNHSNData.xlsx","\\latestNHSNData.xlsx")
 
-    hac = CalculateHACData(fn,ps)
-    hac.runCalculations(m,f)
-    hac.exportDataToExcel()
+    hac = CalculateHACData(fn,ps,m,f)
 
     return hac
 
