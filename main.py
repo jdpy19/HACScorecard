@@ -215,11 +215,20 @@ class CalculateHACData(HacFileManagement):
 
     # Cleaning
     def queryCleanData(self,facility,measure,procedure):
-        temp = self.clean_data.copy()
+        ## Helper Functions ##
+        def createMask(facility, measure, procedure):
+            if procedure:
+                
+                mask = (temp["Facility"] == facility) & (temp["Measure"] == measure) & (temp["Procedure"] == procedure)
+            else:
+                mask = (temp["Facility"] == facility) & (temp["Measure"] == measure)
 
+            return mask
+
+        temp = self.clean_data.copy()
         temp["Date"] = pd.to_datetime(temp["Date"], errors="coerce")
         temp = temp.set_index(temp["Date"]).sort_index(ascending=True)
-        
+
         # if facility == "All Ministries":
         #     temp = temp[(temp.Measure == measure)]
         #     temp = temp.groupby([temp.index.year,temp.index.month]).sum()
@@ -232,21 +241,11 @@ class CalculateHACData(HacFileManagement):
         #     temp = temp.drop(["Y","M"],axis=1)
         # else:
 
-        def createMask(facility, measure, procedure):
-            if procedure:
-                
-                mask = (temp["Facility"] == facility) & (temp["Measure"] == measure) & (temp["Procedure"] == procedure)
-            else:
-                mask = (temp["Facility"] == facility) & (temp["Measure"] == measure)
-
-            return mask
-
         temp = temp[createMask(facility,measure,procedure)]
 
         return temp
 
     def cleanRawData(self):
-
         self.clean_data = self.raw_data.copy()
         self.clean_data["Facility"] = self.clean_data["Facility"].replace(np.nan,"None")
 
