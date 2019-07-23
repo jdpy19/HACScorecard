@@ -123,6 +123,80 @@ class CalculateHACData(HacFileManagement):
 
     # Calculations
     def calcAttributes(self,filteredData,period,measure,procedure):
+        
+        ## Helper functions ##
+        def calculateSIR(df):
+            df["Score"] =  df["Numerator"] / df["Denominator"]
+            df["Score"] = df["Score"].replace(np.inf,0)
+        
+            return df
+
+        def calculatePPTD(df, period):
+            # Calculate Performance Period To Date
+            df["PPTD_NUM"] = 0.0
+            df["PPTD_DEN"] = -1.0
+
+            if period == "CY":
+                df["PPTD_NUM"] = df.groupby(df.index.year)["Numerator"].cumsum()
+                df["PPTD_DEN"] = df.groupby(df.index.year)["Denominator"].cumsum()
+            elif period == "FY":
+                df["FiscalYear"] = df.index + pd.DateOffset(months=-6)
+                df["PPTD_NUM"] = df.groupby(df.FiscalYear.dt.year)["Numerator"].cumsum()
+                df["PPTD_DEN"] = df.groupby(df.FiscalYear.dt.year)["Denominator"].cumsum()
+                df = df.drop(["FiscalYear"],axis=1)
+            elif period == "ROLL":
+                m = df.iloc[-1].Month.month # Error is occuring when Ministry == All Ministries
+                df["Roll"] = df.index + pd.DateOffset(months=-m)
+                df["PPTD_NUM"] = df.groupby(df.Roll.dt.year)["Numerator"].cumsum()
+                df["PPTD_DEN"] = df.groupby(df.Roll.dt.year)["Denominator"].cumsum()
+                df =df.drop(["Roll"],axis=1)
+            else:
+                print("Performance Period type not recognized.")
+
+            df["PPTD"] = df["PPTD_NUM"] / df["PPTD_DEN"]
+
+            return df
+
+        def calculateResidual():
+            #avgDen = df["Denominator"].mean()
+                #df["ResidualVBP"] = round((df["VBP Target"]*(df["PPTD_DEN"] + avgDen*(12-df.FiscalYear.dt.month))) - df["PPTD_NUM"],0)
+                #df["ProjectedDen"] = round((df["VBP Target"]*(df["PPTD_DEN"] + avgDen*(12-df.FiscalYear.dt.month))),0)
+            pass
+
+        def calculate3MonthAVG(df):
+            # Calculate 3 Month rolling average
+            df["CUMSUM_NUM3"] = df["Numerator"].rolling(window=3,min_periods=1).sum()
+            df["CUMSUM_DEN3"] = df["Denominator"].rolling(window=3,min_periods=1).sum()
+            df["Trend_3"] = df["CUMSUM_NUM3"]/df["CUMSUM_DEN3"]
+
+        def calcZScore(df):
+            # Calculate ZScore, 
+            # Cumulative ZScore,
+            # Winsorized ZScore, 
+            # Cumulative Winsorized ZScore, 
+            # Percentile
+
+            if df["Denominator"].sum() >= 1:
+                stats = self.popStats[measure]
+                minZScore = (stats["topFive"] - stats["mean"]) / stats["std"]
+                maxZScore = (stats["bottomFive"] - stats["mean"]) / stats["std"]
+            
+                df["cumZScore"] = (df["PPTD"] - stats["mean"]) / stats["std"]
+                df["ZScore"] = (df["Score"] - stats["mean"]) / stats["std"]
+
+                df["winCumZScore"] = df["cumZScore"].apply(lambda x: maxZScore if x > maxZScore else (minZScore if x < minZScore else x))
+                df["winZScore"] = df["ZScore"].apply(lambda x: maxZScore if x > maxZScore else (minZScore if x < minZScore else x))
+
+                df["Percentile"] = df["winCumZScore"].apply(lambda x: st.norm.cdf(x))
+            else:
+                df["cumZScore"] = np.nan
+                df["ZScore"] = np.nan
+                df["winCumZScore"] = np.nan
+                df["winZScore"] = np.nan
+                df["Percentile"] = np.nan
+            return df
+
+        ## Clean Data ##
         filteredData = filteredData.groupby(filteredData["Date"],as_index=True).agg(
             {
                 "Numerator":"sum",
@@ -132,57 +206,13 @@ class CalculateHACData(HacFileManagement):
                 "Measure":"first",
             }
         )
-
-        filteredData["Score"] =  filteredData["Numerator"] / filteredData["Denominator"]
-        filteredData["Score"] = filteredData["Score"].replace(np.inf,0)
         filteredData["Procedure"] = procedure
-        filteredData["PPTD_NUM"] = 0.0
-        filteredData["PPTD_DEN"] = -1.0
 
-        if period == "CY":
-            filteredData["PPTD_NUM"] = filteredData.groupby(filteredData.index.year)["Numerator"].cumsum()
-            filteredData["PPTD_DEN"] = filteredData.groupby(filteredData.index.year)["Denominator"].cumsum()
-        elif period == "FY":
-            filteredData["FiscalYear"] = filteredData.index + pd.DateOffset(months=-6)
-            filteredData["PPTD_NUM"] = filteredData.groupby(filteredData.FiscalYear.dt.year)["Numerator"].cumsum()
-            filteredData["PPTD_DEN"] = filteredData.groupby(filteredData.FiscalYear.dt.year)["Denominator"].cumsum()
-
-            #avgDen = filteredData["Denominator"].mean()
-            #filteredData["ResidualVBP"] = round((filteredData["VBP Target"]*(filteredData["PPTD_DEN"] + avgDen*(12-filteredData.FiscalYear.dt.month))) - filteredData["PPTD_NUM"],0)
-            #filteredData["ProjectedDen"] = round((filteredData["VBP Target"]*(filteredData["PPTD_DEN"] + avgDen*(12-filteredData.FiscalYear.dt.month))),0)
-
-            filteredData = filteredData.drop(["FiscalYear"],axis=1)
-        elif period == "ROLL":
-            m = filteredData.iloc[-1].Month.month # Error is occuring when Ministry == All Ministries
-            filteredData["Roll"] = filteredData.index + pd.DateOffset(months=-m)
-            filteredData["PPTD_NUM"] = filteredData.groupby(filteredData.Roll.dt.year)["Numerator"].cumsum()
-            filteredData["PPTD_DEN"] = filteredData.groupby(filteredData.Roll.dt.year)["Denominator"].cumsum()
-            filteredData =filteredData.drop(["Roll"],axis=1)
-        else:
-            print("Performance Period type not recognized.")
-
-        filteredData["PPTD"] = filteredData["PPTD_NUM"] / filteredData["PPTD_DEN"]
-
-        filteredData["CUMSUM_NUM3"] = filteredData["Numerator"].rolling(window=3,min_periods=1).sum()
-        filteredData["CUMSUM_DEN3"] = filteredData["Denominator"].rolling(window=3,min_periods=1).sum()
-        filteredData["Trend_3"] = filteredData["CUMSUM_NUM3"]/filteredData["CUMSUM_DEN3"]
-
-        # Z-score calculations
-        stats = self.popStats[measure]
-        minZScore = (stats["topFive"] - stats["mean"]) / stats["std"]
-        maxZScore = (stats["bottomFive"] - stats["mean"]) / stats["std"]
-        
-        filteredData["cumZScore"] = (filteredData["PPTD"] - stats["mean"]) / stats["std"]
-        filteredData["ZScore"] = (filteredData["Score"] - stats["mean"]) / stats["std"]
-
-        filteredData["winCumZScore"] = filteredData["cumZScore"].apply(lambda x: maxZScore if x > maxZScore else (minZScore if x < minZScore else x))
-        filteredData["winZScore"] = filteredData["ZScore"].apply(lambda x: maxZScore if x > maxZScore else (minZScore if x < minZScore else x))
-
-        filteredData["Percentile"] = filteredData["winCumZScore"].apply(lambda x: st.norm.cdf(x))
-       
-        
-        #filteredData = filteredData.drop(["PPTD_NUM","PPTD_DEN","CUMSUM_NUM3","CUMSUM_DEN3"],axis=1)
-        #filteredData = filteredData.replace(np.nan,0)
+        ## Run calculations ##
+        filteredData = calcZScore(filteredData)
+        filteredData = calculate3MonthAVG(filteredData)
+        filteredData = calculatePPTD(filteredData,period)
+        filteredData = calcZScore(filteredData)
         filteredData["Date"] = filteredData.index
 
         return filteredData
@@ -229,19 +259,20 @@ class CalculateHACData(HacFileManagement):
         temp["Date"] = pd.to_datetime(temp["Date"], errors="coerce")
         temp = temp.set_index(temp["Date"]).sort_index(ascending=True)
 
-        # if facility == "All Ministries":
-        #     temp = temp[(temp.Measure == measure)]
-        #     temp = temp.groupby([temp.index.year,temp.index.month]).sum()
-        #     temp.index = temp.index.set_names(["Y", "M"])
-        #     temp.reset_index(inplace=True)
-        #     temp["Date"] = pd.to_datetime({"year":temp.Y,"month":temp.M,"day":1}, format="%Y%m%d")
-        #     temp["Measure"] = measure
-        #     temp["Facility"] = "All Ministries"
-        #     temp = temp.set_index("Date",drop=False)
-        #     temp = temp.drop(["Y","M"],axis=1)
-        # else:
+        if facility == "All Ministries":
+            temp = temp[(temp["Measure"] == measure) & (temp["Facility"] != "All Ministries")] # Want to aggregate large facilities, All Ministries raw data includes regional facilities
+            temp = temp.groupby([temp.index.year,temp.index.month]).sum()
+            temp.index = temp.index.set_names(["Y", "M"])
+            temp.reset_index(inplace=True)
 
-        temp = temp[createMask(facility,measure,procedure)]
+            temp["Date"] = pd.to_datetime({"year":temp.Y,"month":temp.M,"day":1}, format="%Y%m%d")
+            
+            temp["Measure"] = measure
+            temp["Facility"] = "All Ministries"
+            temp = temp.set_index("Date",drop=False)
+            temp = temp.drop(["Y","M"],axis=1)
+        else:
+            temp = temp[createMask(facility,measure,procedure)]
 
         return temp
 

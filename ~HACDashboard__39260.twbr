@@ -1,0 +1,1205 @@
+<?xml version='1.0' encoding='utf-8' ?>
+
+<!-- build 20183.18.1018.1932                               -->
+<workbook source-build='2018.3.0 (20183.18.1018.1932)' source-platform='win' version='18.1' xmlns:user='http://www.tableausoftware.com/xml/user'>
+  <document-format-change-manifest>
+    <SortTagCleanup />
+    <WindowsPersistSimpleIdentifiers />
+    <ZoneBackgroundTransparency />
+  </document-format-change-manifest>
+  <preferences>
+    <preference name='ui.encoding.shelf.height' value='24' />
+    <preference name='ui.shelf.height' value='26' />
+  </preferences>
+  <datasources>
+    <datasource caption='Sheet1 (currentNHSNData)' inline='true' name='federated.0psocvp0oxlaz017zj0cs141e5fj' version='18.1'>
+      <connection class='federated'>
+        <named-connections>
+          <named-connection caption='currentNHSNData' name='excel-direct.0f1qykd0zyvk7p1d8jfgz1awl5v5'>
+            <connection class='excel-direct' cleaning='no' compat='no' dataRefreshTime='' filename='C:/Users/JDits001/Documents/Projects/HACScorecard/HACScorecardData/currentNHSNData.xlsx' interpretationMode='0' password='' server='' validate='no' />
+          </named-connection>
+        </named-connections>
+        <relation connection='excel-direct.0f1qykd0zyvk7p1d8jfgz1awl5v5' name='Sheet1' table='[Sheet1$]' type='table'>
+          <columns gridOrigin='A1:T1416:no:A1:T1416:0' header='yes' outcome='2'>
+            <column datatype='date' name='F1' ordinal='0' />
+            <column datatype='real' name='CUMSUM_DEN3' ordinal='1' />
+            <column datatype='integer' name='CUMSUM_NUM3' ordinal='2' />
+            <column datatype='date' name='Date' ordinal='3' />
+            <column datatype='real' name='Denominator' ordinal='4' />
+            <column datatype='string' name='Facility' ordinal='5' />
+            <column datatype='string' name='Measure' ordinal='6' />
+            <column datatype='integer' name='Numerator' ordinal='7' />
+            <column datatype='real' name='PPTD' ordinal='8' />
+            <column datatype='real' name='PPTD_DEN' ordinal='9' />
+            <column datatype='integer' name='PPTD_NUM' ordinal='10' />
+            <column datatype='real' name='Percentile' ordinal='11' />
+            <column datatype='string' name='Procedure' ordinal='12' />
+            <column datatype='real' name='Score' ordinal='13' />
+            <column datatype='real' name='Trend_3' ordinal='14' />
+            <column datatype='integer' name='Units' ordinal='15' />
+            <column datatype='real' name='ZScore' ordinal='16' />
+            <column datatype='real' name='cumZScore' ordinal='17' />
+            <column datatype='real' name='winCumZScore' ordinal='18' />
+            <column datatype='real' name='winZScore' ordinal='19' />
+          </columns>
+        </relation>
+        <metadata-records>
+          <metadata-record class='column'>
+            <remote-name>F1</remote-name>
+            <remote-type>7</remote-type>
+            <local-name>[F1]</local-name>
+            <parent-name>[Sheet1]</parent-name>
+            <remote-alias>F1</remote-alias>
+            <ordinal>0</ordinal>
+            <local-type>date</local-type>
+            <aggregation>Year</aggregation>
+            <contains-null>true</contains-null>
+            <attributes>
+              <attribute datatype='string' name='DebugRemoteType'>&quot;DATE&quot;</attribute>
+            </attributes>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>CUMSUM_DEN3</remote-name>
+            <remote-type>5</remote-type>
+            <local-name>[CUMSUM_DEN3]</local-name>
+            <parent-name>[Sheet1]</parent-name>
+            <remote-alias>CUMSUM_DEN3</remote-alias>
+            <ordinal>1</ordinal>
+            <local-type>real</local-type>
+            <aggregation>Sum</aggregation>
+            <precision>15</precision>
+            <contains-null>true</contains-null>
+            <attributes>
+              <attribute datatype='string' name='DebugRemoteType'>&quot;R8&quot;</attribute>
+            </attributes>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>CUMSUM_NUM3</remote-name>
+            <remote-type>20</remote-type>
+            <local-name>[CUMSUM_NUM3]</local-name>
+            <parent-name>[Sheet1]</parent-name>
+            <remote-alias>CUMSUM_NUM3</remote-alias>
+            <ordinal>2</ordinal>
+            <local-type>integer</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+            <attributes>
+              <attribute datatype='string' name='DebugRemoteType'>&quot;I8&quot;</attribute>
+            </attributes>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>Date</remote-name>
+            <remote-type>7</remote-type>
+            <local-name>[Date]</local-name>
+            <parent-name>[Sheet1]</parent-name>
+            <remote-alias>Date</remote-alias>
+            <ordinal>3</ordinal>
+            <local-type>date</local-type>
+            <aggregation>Year</aggregation>
+            <contains-null>true</contains-null>
+            <attributes>
+              <attribute datatype='string' name='DebugRemoteType'>&quot;DATE&quot;</attribute>
+            </attributes>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>Denominator</remote-name>
+            <remote-type>5</remote-type>
+            <local-name>[Denominator]</local-name>
+            <parent-name>[Sheet1]</parent-name>
+            <remote-alias>Denominator</remote-alias>
+            <ordinal>4</ordinal>
+            <local-type>real</local-type>
+            <aggregation>Sum</aggregation>
+            <precision>15</precision>
+            <contains-null>true</contains-null>
+            <attributes>
+              <attribute datatype='string' name='DebugRemoteType'>&quot;R8&quot;</attribute>
+            </attributes>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>Facility</remote-name>
+            <remote-type>130</remote-type>
+            <local-name>[Facility]</local-name>
+            <parent-name>[Sheet1]</parent-name>
+            <remote-alias>Facility</remote-alias>
+            <ordinal>5</ordinal>
+            <local-type>string</local-type>
+            <aggregation>Count</aggregation>
+            <contains-null>true</contains-null>
+            <collation flag='1' name='LEN_RUS_S2' />
+            <attributes>
+              <attribute datatype='string' name='DebugRemoteType'>&quot;WSTR&quot;</attribute>
+            </attributes>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>Measure</remote-name>
+            <remote-type>130</remote-type>
+            <local-name>[Measure]</local-name>
+            <parent-name>[Sheet1]</parent-name>
+            <remote-alias>Measure</remote-alias>
+            <ordinal>6</ordinal>
+            <local-type>string</local-type>
+            <aggregation>Count</aggregation>
+            <contains-null>true</contains-null>
+            <collation flag='1' name='LEN_RUS_S2' />
+            <attributes>
+              <attribute datatype='string' name='DebugRemoteType'>&quot;WSTR&quot;</attribute>
+            </attributes>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>Numerator</remote-name>
+            <remote-type>20</remote-type>
+            <local-name>[Numerator]</local-name>
+            <parent-name>[Sheet1]</parent-name>
+            <remote-alias>Numerator</remote-alias>
+            <ordinal>7</ordinal>
+            <local-type>integer</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+            <attributes>
+              <attribute datatype='string' name='DebugRemoteType'>&quot;I8&quot;</attribute>
+            </attributes>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>PPTD</remote-name>
+            <remote-type>5</remote-type>
+            <local-name>[PPTD]</local-name>
+            <parent-name>[Sheet1]</parent-name>
+            <remote-alias>PPTD</remote-alias>
+            <ordinal>8</ordinal>
+            <local-type>real</local-type>
+            <aggregation>Sum</aggregation>
+            <precision>15</precision>
+            <contains-null>true</contains-null>
+            <attributes>
+              <attribute datatype='string' name='DebugRemoteType'>&quot;R8&quot;</attribute>
+            </attributes>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>PPTD_DEN</remote-name>
+            <remote-type>5</remote-type>
+            <local-name>[PPTD_DEN]</local-name>
+            <parent-name>[Sheet1]</parent-name>
+            <remote-alias>PPTD_DEN</remote-alias>
+            <ordinal>9</ordinal>
+            <local-type>real</local-type>
+            <aggregation>Sum</aggregation>
+            <precision>15</precision>
+            <contains-null>true</contains-null>
+            <attributes>
+              <attribute datatype='string' name='DebugRemoteType'>&quot;R8&quot;</attribute>
+            </attributes>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>PPTD_NUM</remote-name>
+            <remote-type>20</remote-type>
+            <local-name>[PPTD_NUM]</local-name>
+            <parent-name>[Sheet1]</parent-name>
+            <remote-alias>PPTD_NUM</remote-alias>
+            <ordinal>10</ordinal>
+            <local-type>integer</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+            <attributes>
+              <attribute datatype='string' name='DebugRemoteType'>&quot;I8&quot;</attribute>
+            </attributes>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>Percentile</remote-name>
+            <remote-type>5</remote-type>
+            <local-name>[Percentile]</local-name>
+            <parent-name>[Sheet1]</parent-name>
+            <remote-alias>Percentile</remote-alias>
+            <ordinal>11</ordinal>
+            <local-type>real</local-type>
+            <aggregation>Sum</aggregation>
+            <precision>15</precision>
+            <contains-null>true</contains-null>
+            <attributes>
+              <attribute datatype='string' name='DebugRemoteType'>&quot;R8&quot;</attribute>
+            </attributes>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>Procedure</remote-name>
+            <remote-type>130</remote-type>
+            <local-name>[Procedure]</local-name>
+            <parent-name>[Sheet1]</parent-name>
+            <remote-alias>Procedure</remote-alias>
+            <ordinal>12</ordinal>
+            <local-type>string</local-type>
+            <aggregation>Count</aggregation>
+            <contains-null>true</contains-null>
+            <collation flag='1' name='LEN_RUS_S2' />
+            <attributes>
+              <attribute datatype='string' name='DebugRemoteType'>&quot;WSTR&quot;</attribute>
+            </attributes>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>Score</remote-name>
+            <remote-type>5</remote-type>
+            <local-name>[Score]</local-name>
+            <parent-name>[Sheet1]</parent-name>
+            <remote-alias>Score</remote-alias>
+            <ordinal>13</ordinal>
+            <local-type>real</local-type>
+            <aggregation>Sum</aggregation>
+            <precision>15</precision>
+            <contains-null>true</contains-null>
+            <attributes>
+              <attribute datatype='string' name='DebugRemoteType'>&quot;R8&quot;</attribute>
+            </attributes>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>Trend_3</remote-name>
+            <remote-type>5</remote-type>
+            <local-name>[Trend_3]</local-name>
+            <parent-name>[Sheet1]</parent-name>
+            <remote-alias>Trend_3</remote-alias>
+            <ordinal>14</ordinal>
+            <local-type>real</local-type>
+            <aggregation>Sum</aggregation>
+            <precision>15</precision>
+            <contains-null>true</contains-null>
+            <attributes>
+              <attribute datatype='string' name='DebugRemoteType'>&quot;R8&quot;</attribute>
+            </attributes>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>Units</remote-name>
+            <remote-type>20</remote-type>
+            <local-name>[Units]</local-name>
+            <parent-name>[Sheet1]</parent-name>
+            <remote-alias>Units</remote-alias>
+            <ordinal>15</ordinal>
+            <local-type>integer</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+            <attributes>
+              <attribute datatype='string' name='DebugRemoteType'>&quot;I8&quot;</attribute>
+            </attributes>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>ZScore</remote-name>
+            <remote-type>5</remote-type>
+            <local-name>[ZScore]</local-name>
+            <parent-name>[Sheet1]</parent-name>
+            <remote-alias>ZScore</remote-alias>
+            <ordinal>16</ordinal>
+            <local-type>real</local-type>
+            <aggregation>Sum</aggregation>
+            <precision>15</precision>
+            <contains-null>true</contains-null>
+            <attributes>
+              <attribute datatype='string' name='DebugRemoteType'>&quot;R8&quot;</attribute>
+            </attributes>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>cumZScore</remote-name>
+            <remote-type>5</remote-type>
+            <local-name>[cumZScore]</local-name>
+            <parent-name>[Sheet1]</parent-name>
+            <remote-alias>cumZScore</remote-alias>
+            <ordinal>17</ordinal>
+            <local-type>real</local-type>
+            <aggregation>Sum</aggregation>
+            <precision>15</precision>
+            <contains-null>true</contains-null>
+            <attributes>
+              <attribute datatype='string' name='DebugRemoteType'>&quot;R8&quot;</attribute>
+            </attributes>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>winCumZScore</remote-name>
+            <remote-type>5</remote-type>
+            <local-name>[winCumZScore]</local-name>
+            <parent-name>[Sheet1]</parent-name>
+            <remote-alias>winCumZScore</remote-alias>
+            <ordinal>18</ordinal>
+            <local-type>real</local-type>
+            <aggregation>Sum</aggregation>
+            <precision>15</precision>
+            <contains-null>true</contains-null>
+            <attributes>
+              <attribute datatype='string' name='DebugRemoteType'>&quot;R8&quot;</attribute>
+            </attributes>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>winZScore</remote-name>
+            <remote-type>5</remote-type>
+            <local-name>[winZScore]</local-name>
+            <parent-name>[Sheet1]</parent-name>
+            <remote-alias>winZScore</remote-alias>
+            <ordinal>19</ordinal>
+            <local-type>real</local-type>
+            <aggregation>Sum</aggregation>
+            <precision>15</precision>
+            <contains-null>true</contains-null>
+            <attributes>
+              <attribute datatype='string' name='DebugRemoteType'>&quot;R8&quot;</attribute>
+            </attributes>
+          </metadata-record>
+          <metadata-record class='capability'>
+            <remote-name />
+            <remote-type>0</remote-type>
+            <parent-name>[Sheet1]</parent-name>
+            <remote-alias />
+            <aggregation>Count</aggregation>
+            <contains-null>true</contains-null>
+            <attributes>
+              <attribute datatype='integer' name='context'>1</attribute>
+              <attribute datatype='string' name='gridOrigin'>&quot;A1:T1416:no:A1:T1416:0&quot;</attribute>
+              <attribute datatype='boolean' name='header'>true</attribute>
+              <attribute datatype='integer' name='outcome'>2</attribute>
+            </attributes>
+          </metadata-record>
+        </metadata-records>
+      </connection>
+      <aliases enabled='yes' />
+      <column caption='Cumsum Den3' datatype='real' name='[CUMSUM_DEN3]' role='measure' type='quantitative' />
+      <column caption='Cumsum Num3' datatype='integer' name='[CUMSUM_NUM3]' role='measure' type='quantitative' />
+      <column caption='IsZScoreEqualWinsor' datatype='boolean' name='[Calculation_1196550139351998464]' role='dimension' type='nominal'>
+        <calculation class='tableau' formula='IF [ZScore] = [winZScore] THEN TRUE&#13;&#10;ELSE FALSE&#13;&#10;END' />
+      </column>
+      <column caption='CellBarChart' datatype='integer' name='[Calculation_1196550139353513987]' role='measure' type='quantitative'>
+        <calculation class='tableau' formula='1' />
+      </column>
+      <column caption='PercentileGroups' datatype='string' name='[Calculation_1196550139353632772]' role='dimension' type='nominal'>
+        <calculation class='tableau' formula='IF [Percentile] &lt;= 0.05 THEN &quot;Top 5%&quot;&#13;&#10;ELSEIF [Percentile] &gt; 0.95 THEN &quot;Bottom 5%&quot;&#13;&#10;ELSEIF Percentile &gt; 0.05 AND [Percentile] &lt;= 0.5 THEN &quot;Top 50%&quot;&#13;&#10;ELSE &quot;Bottom 50%&quot;&#13;&#10;END' />
+      </column>
+      <column caption='Calculation1' datatype='date' name='[Calculation_2762676911144460289]' role='dimension' type='ordinal'>
+        <calculation class='tableau' formula='{MAX([Date])}' />
+      </column>
+      <column datatype='integer' name='[Number of Records]' role='measure' type='quantitative' user:auto-column='numrec'>
+        <calculation class='tableau' formula='1' />
+      </column>
+      <column caption='Pptd' datatype='real' name='[PPTD]' role='measure' type='quantitative' />
+      <column caption='Pptd Den' datatype='real' name='[PPTD_DEN]' role='measure' type='quantitative' />
+      <column caption='Pptd Num' datatype='integer' name='[PPTD_NUM]' role='dimension' type='ordinal' />
+      <column caption='Trend 3' datatype='real' name='[Trend_3]' role='measure' type='quantitative' />
+      <column caption='Z Score' datatype='real' name='[ZScore]' role='measure' type='quantitative' />
+      <column caption='Cum Z Score' datatype='real' name='[cumZScore]' role='measure' type='quantitative' />
+      <column caption='Win Cum Z Score' datatype='real' name='[winCumZScore]' role='measure' type='quantitative' />
+      <column caption='Win Z Score' datatype='real' name='[winZScore]' role='measure' type='quantitative' />
+      <column-instance column='[winCumZScore]' derivation='Attribute' name='[attr:winCumZScore:qk]' pivot='key' type='quantitative' />
+      <column-instance column='[Calculation_1196550139351998464]' derivation='None' name='[none:Calculation_1196550139351998464:nk]' pivot='key' type='nominal' />
+      <column-instance column='[Calculation_1196550139353632772]' derivation='None' name='[none:Calculation_1196550139353632772:nk]' pivot='key' type='nominal' />
+      <column-instance column='[winZScore]' derivation='Sum' name='[sum:winZScore:qk]' pivot='key' type='quantitative' />
+      <layout dim-ordering='alphabetic' dim-percentage='0.399281' measure-ordering='alphabetic' measure-percentage='0.600719' show-structure='true' user-set-layout='true' />
+      <style>
+        <style-rule element='mark'>
+          <encoding attr='color' field='[none:Calculation_1196550139353632772:nk]' type='palette'>
+            <map to='#4e79a7'>
+              <bucket>&quot;Top 50\%&quot;</bucket>
+            </map>
+            <map to='#59a14f'>
+              <bucket>&quot;Top 5\%&quot;</bucket>
+            </map>
+            <map to='#e15759'>
+              <bucket>&quot;Bottom 50\%&quot;</bucket>
+            </map>
+            <map to='#f28e2b'>
+              <bucket>&quot;Bottom 5\%&quot;</bucket>
+            </map>
+          </encoding>
+          <encoding attr='color' field='[:Measure Names]' type='palette'>
+            <map to='#4e79a7'>
+              <bucket>&quot;[federated.0psocvp0oxlaz017zj0cs141e5fj].[attr:winCumZScore:qk]&quot;</bucket>
+            </map>
+            <map to='#f28e2b'>
+              <bucket>&quot;[federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:winZScore:qk]&quot;</bucket>
+            </map>
+          </encoding>
+          <encoding attr='color' field='[none:Calculation_1196550139351998464:nk]' type='palette'>
+            <map to='#4e79a7'>
+              <bucket>true</bucket>
+            </map>
+            <map to='#b07aa1'>
+              <bucket>false</bucket>
+            </map>
+          </encoding>
+        </style-rule>
+      </style>
+      <semantic-values>
+        <semantic-value key='[Country].[Name]' value='&quot;United States&quot;' />
+      </semantic-values>
+    </datasource>
+  </datasources>
+  <actions>
+    <action caption='Highlight 1 (generated)' name='[Action1]'>
+      <activation auto-clear='true' type='on-select' />
+      <source type='sheet' worksheet='PercentileGrid' />
+      <command command='tsc:brush'>
+        <param name='field-captions' value='PercentileGroups' />
+        <param name='target' value='PercentileGrid' />
+      </command>
+    </action>
+  </actions>
+  <worksheets>
+    <worksheet name='DataTable'>
+      <table>
+        <view>
+          <datasources>
+            <datasource caption='Sheet1 (currentNHSNData)' name='federated.0psocvp0oxlaz017zj0cs141e5fj' />
+          </datasources>
+          <datasource-dependencies datasource='federated.0psocvp0oxlaz017zj0cs141e5fj'>
+            <column caption='PercentileGroups' datatype='string' name='[Calculation_1196550139353632772]' role='dimension' type='nominal'>
+              <calculation class='tableau' formula='IF [Percentile] &lt;= 0.05 THEN &quot;Top 5%&quot;&#13;&#10;ELSEIF [Percentile] &gt; 0.95 THEN &quot;Bottom 5%&quot;&#13;&#10;ELSEIF Percentile &gt; 0.05 AND [Percentile] &lt;= 0.5 THEN &quot;Top 50%&quot;&#13;&#10;ELSE &quot;Bottom 50%&quot;&#13;&#10;END' />
+            </column>
+            <column datatype='date' name='[Date]' role='dimension' type='ordinal' />
+            <column datatype='real' name='[Denominator]' role='measure' type='quantitative' />
+            <column datatype='date' name='[F1]' role='dimension' type='ordinal' />
+            <column datatype='string' name='[Facility]' role='dimension' type='nominal' />
+            <column datatype='string' name='[Measure]' role='dimension' type='nominal' />
+            <column datatype='integer' name='[Numerator]' role='measure' type='quantitative' />
+            <column caption='Pptd' datatype='real' name='[PPTD]' role='measure' type='quantitative' />
+            <column datatype='real' name='[Percentile]' role='measure' type='quantitative' />
+            <column datatype='string' name='[Procedure]' role='dimension' type='nominal' />
+            <column datatype='real' name='[Score]' role='measure' type='quantitative' />
+            <column caption='Z Score' datatype='real' name='[ZScore]' role='measure' type='quantitative' />
+            <column caption='Cum Z Score' datatype='real' name='[cumZScore]' role='measure' type='quantitative' />
+            <column-instance column='[Calculation_1196550139353632772]' derivation='None' name='[none:Calculation_1196550139353632772:nk]' pivot='key' type='nominal' />
+            <column-instance column='[Date]' derivation='None' name='[none:Date:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[Facility]' derivation='None' name='[none:Facility:nk]' pivot='key' type='nominal' />
+            <column-instance column='[Measure]' derivation='None' name='[none:Measure:nk]' pivot='key' type='nominal' />
+            <column-instance column='[Procedure]' derivation='None' name='[none:Procedure:nk]' pivot='key' type='nominal' />
+            <column-instance column='[Denominator]' derivation='Sum' name='[sum:Denominator:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[Numerator]' derivation='Sum' name='[sum:Numerator:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[PPTD]' derivation='Sum' name='[sum:PPTD:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[Percentile]' derivation='Sum' name='[sum:Percentile:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[Score]' derivation='Sum' name='[sum:Score:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[ZScore]' derivation='Sum' name='[sum:ZScore:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[cumZScore]' derivation='Sum' name='[sum:cumZScore:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[winCumZScore]' derivation='Sum' name='[sum:winCumZScore:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[winZScore]' derivation='Sum' name='[sum:winZScore:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[F1]' derivation='Month-Trunc' name='[tmn:F1:ok]' pivot='key' type='ordinal' />
+            <column caption='Win Cum Z Score' datatype='real' name='[winCumZScore]' role='measure' type='quantitative' />
+            <column caption='Win Z Score' datatype='real' name='[winZScore]' role='measure' type='quantitative' />
+          </datasource-dependencies>
+          <filter class='categorical' column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[:Measure Names]'>
+            <groupfilter function='union' user:op='manual'>
+              <groupfilter function='member' level='[:Measure Names]' member='&quot;[federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:Percentile:qk]&quot;' />
+              <groupfilter function='member' level='[:Measure Names]' member='&quot;[federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:cumZScore:qk]&quot;' />
+              <groupfilter function='member' level='[:Measure Names]' member='&quot;[federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:Denominator:qk]&quot;' />
+              <groupfilter function='member' level='[:Measure Names]' member='&quot;[federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:Numerator:qk]&quot;' />
+              <groupfilter function='member' level='[:Measure Names]' member='&quot;[federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:PPTD:qk]&quot;' />
+              <groupfilter function='member' level='[:Measure Names]' member='&quot;[federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:Score:qk]&quot;' />
+              <groupfilter function='member' level='[:Measure Names]' member='&quot;[federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:winCumZScore:qk]&quot;' />
+              <groupfilter function='member' level='[:Measure Names]' member='&quot;[federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:winZScore:qk]&quot;' />
+              <groupfilter function='member' level='[:Measure Names]' member='&quot;[federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:ZScore:qk]&quot;' />
+            </groupfilter>
+          </filter>
+          <manual-sort column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[:Measure Names]' direction='ASC'>
+            <dictionary>
+              <bucket>&quot;[federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:Percentile:qk]&quot;</bucket>
+              <bucket>&quot;[federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:cumZScore:qk]&quot;</bucket>
+              <bucket>&quot;[federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:Denominator:qk]&quot;</bucket>
+              <bucket>&quot;[federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:Numerator:qk]&quot;</bucket>
+              <bucket>&quot;[federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:PPTD:qk]&quot;</bucket>
+              <bucket>&quot;[federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:Score:qk]&quot;</bucket>
+              <bucket>&quot;[federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:winCumZScore:qk]&quot;</bucket>
+              <bucket>&quot;[federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:winZScore:qk]&quot;</bucket>
+              <bucket>&quot;[federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:ZScore:qk]&quot;</bucket>
+            </dictionary>
+          </manual-sort>
+          <manual-sort column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Calculation_1196550139353632772:nk]' direction='ASC'>
+            <dictionary>
+              <bucket>&quot;Top 5\%&quot;</bucket>
+              <bucket>&quot;Top 50\%&quot;</bucket>
+              <bucket>&quot;Bottom 50\%&quot;</bucket>
+              <bucket>&quot;Bottom 5\%&quot;</bucket>
+            </dictionary>
+          </manual-sort>
+          <filter class='quantitative' column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Date:qk]' filter-group='4' included-values='in-range'>
+            <min>#2017-07-01#</min>
+            <max>#2019-06-01#</max>
+          </filter>
+          <filter class='categorical' column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Facility:nk]' filter-group='3'>
+            <groupfilter function='member' level='[none:Facility:nk]' member='&quot;SV Kokomo&quot;' user:ui-domain='relevant' user:ui-enumeration='inclusive' user:ui-marker='enumerate' />
+          </filter>
+          <filter class='categorical' column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Measure:nk]' filter-group='5'>
+            <groupfilter from='&quot;CAUTI&quot;' function='range' level='[none:Measure:nk]' to='&quot;SSI&quot;' user:ui-domain='relevant' user:ui-enumeration='inclusive' user:ui-marker='enumerate' />
+          </filter>
+          <filter class='categorical' column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Procedure:nk]' filter-group='7'>
+            <groupfilter function='member' level='[none:Procedure:nk]' member='&quot;FALSE&quot;' user:ui-domain='relevant' user:ui-enumeration='inclusive' user:ui-marker='enumerate' />
+          </filter>
+          <slices>
+            <column>[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Facility:nk]</column>
+            <column>[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Measure:nk]</column>
+            <column>[federated.0psocvp0oxlaz017zj0cs141e5fj].[:Measure Names]</column>
+            <column>[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Procedure:nk]</column>
+            <column>[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Date:qk]</column>
+          </slices>
+          <aggregation value='true' />
+        </view>
+        <style>
+          <style-rule element='label'>
+            <format attr='text-format' field='[federated.0psocvp0oxlaz017zj0cs141e5fj].[tmn:F1:ok]' value='*MMM-YY' />
+          </style-rule>
+          <style-rule element='legend'>
+            <format attr='col-width' field='[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Calculation_1196550139353632772:nk]' value='100' />
+          </style-rule>
+        </style>
+        <panes>
+          <pane selection-relaxation-option='selection-relaxation-allow'>
+            <view>
+              <breakdown value='auto' />
+            </view>
+            <mark class='Automatic' />
+            <encodings>
+              <color column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Calculation_1196550139353632772:nk]' />
+              <text column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[Multiple Values]' />
+            </encodings>
+            <style>
+              <style-rule element='mark'>
+                <format attr='mark-labels-show' value='true' />
+              </style-rule>
+            </style>
+          </pane>
+        </panes>
+        <rows>([federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Measure:nk] / [federated.0psocvp0oxlaz017zj0cs141e5fj].[:Measure Names])</rows>
+        <cols>[federated.0psocvp0oxlaz017zj0cs141e5fj].[tmn:F1:ok]</cols>
+      </table>
+    </worksheet>
+    <worksheet name='PercentileGrid'>
+      <table>
+        <view>
+          <datasources>
+            <datasource caption='Sheet1 (currentNHSNData)' name='federated.0psocvp0oxlaz017zj0cs141e5fj' />
+          </datasources>
+          <datasource-dependencies datasource='federated.0psocvp0oxlaz017zj0cs141e5fj'>
+            <column caption='CellBarChart' datatype='integer' name='[Calculation_1196550139353513987]' role='measure' type='quantitative'>
+              <calculation class='tableau' formula='1' />
+            </column>
+            <column caption='PercentileGroups' datatype='string' name='[Calculation_1196550139353632772]' role='dimension' type='nominal'>
+              <calculation class='tableau' formula='IF [Percentile] &lt;= 0.05 THEN &quot;Top 5%&quot;&#13;&#10;ELSEIF [Percentile] &gt; 0.95 THEN &quot;Bottom 5%&quot;&#13;&#10;ELSEIF Percentile &gt; 0.05 AND [Percentile] &lt;= 0.5 THEN &quot;Top 50%&quot;&#13;&#10;ELSE &quot;Bottom 50%&quot;&#13;&#10;END' />
+            </column>
+            <column datatype='date' name='[Date]' role='dimension' type='ordinal' />
+            <column datatype='date' name='[F1]' role='dimension' type='ordinal' />
+            <column datatype='string' name='[Facility]' role='dimension' type='nominal' />
+            <column datatype='string' name='[Measure]' role='dimension' type='nominal' />
+            <column datatype='real' name='[Percentile]' role='measure' type='quantitative' />
+            <column datatype='string' name='[Procedure]' role='dimension' type='nominal' />
+            <column-instance column='[Calculation_1196550139353513987]' derivation='Min' name='[min:Calculation_1196550139353513987:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[F1]' derivation='MY' name='[my:F1:ok]' pivot='key' type='ordinal' />
+            <column-instance column='[Calculation_1196550139353632772]' derivation='None' name='[none:Calculation_1196550139353632772:nk]' pivot='key' type='nominal' />
+            <column-instance column='[Date]' derivation='None' name='[none:Date:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[Facility]' derivation='None' name='[none:Facility:nk]' pivot='key' type='nominal' />
+            <column-instance column='[Measure]' derivation='None' name='[none:Measure:nk]' pivot='key' type='nominal' />
+            <column-instance column='[Procedure]' derivation='None' name='[none:Procedure:nk]' pivot='key' type='nominal' />
+            <column-instance column='[Percentile]' derivation='Sum' name='[sum:Percentile:qk]' pivot='key' type='quantitative' />
+          </datasource-dependencies>
+          <filter class='categorical' column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[my:F1:ok]'>
+            <groupfilter count='1' end='top' function='end' units='records' user:ui-marker='end' user:ui-top-by-field='true'>
+              <groupfilter direction='DESC' expression='MAX([F1])' function='order' user:ui-marker='order'>
+                <groupfilter function='level-members' level='[my:F1:ok]' user:ui-enumeration='all' user:ui-marker='enumerate' />
+              </groupfilter>
+            </groupfilter>
+          </filter>
+          <filter class='quantitative' column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Date:qk]' filter-group='4' included-values='in-range'>
+            <min>#2017-07-01#</min>
+            <max>#2019-06-01#</max>
+          </filter>
+          <filter class='categorical' column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Facility:nk]' filter-group='3'>
+            <groupfilter function='member' level='[none:Facility:nk]' member='&quot;SV Kokomo&quot;' user:ui-domain='relevant' user:ui-enumeration='inclusive' user:ui-marker='enumerate' />
+          </filter>
+          <filter class='categorical' column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Measure:nk]' filter-group='5'>
+            <groupfilter from='&quot;CAUTI&quot;' function='range' level='[none:Measure:nk]' to='&quot;SSI&quot;' user:ui-domain='relevant' user:ui-enumeration='inclusive' user:ui-marker='enumerate' />
+          </filter>
+          <filter class='categorical' column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Procedure:nk]' filter-group='7'>
+            <groupfilter function='member' level='[none:Procedure:nk]' member='&quot;FALSE&quot;' user:ui-domain='relevant' user:ui-enumeration='inclusive' user:ui-marker='enumerate' />
+          </filter>
+          <slices>
+            <column>[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Facility:nk]</column>
+            <column>[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Measure:nk]</column>
+            <column>[federated.0psocvp0oxlaz017zj0cs141e5fj].[my:F1:ok]</column>
+            <column>[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Procedure:nk]</column>
+            <column>[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Date:qk]</column>
+          </slices>
+          <aggregation value='true' />
+        </view>
+        <style>
+          <style-rule element='cell'>
+            <format attr='width' field='[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Facility:nk]' value='125' />
+          </style-rule>
+          <style-rule element='header'>
+            <format attr='width' field='[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Measure:nk]' value='56' />
+          </style-rule>
+          <style-rule element='worksheet'>
+            <format attr='display-field-labels' scope='cols' value='false' />
+          </style-rule>
+        </style>
+        <panes>
+          <pane selection-relaxation-option='selection-relaxation-allow'>
+            <view>
+              <breakdown value='auto' />
+            </view>
+            <mark class='Bar' />
+            <encodings>
+              <color column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Calculation_1196550139353632772:nk]' />
+              <size column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[min:Calculation_1196550139353513987:qk]' />
+              <text column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:Percentile:qk]' />
+            </encodings>
+            <style>
+              <style-rule element='mark'>
+                <format attr='mark-labels-show' value='true' />
+              </style-rule>
+              <style-rule element='pane'>
+                <format attr='minwidth' value='-1' />
+                <format attr='maxwidth' value='-1' />
+              </style-rule>
+            </style>
+          </pane>
+        </panes>
+        <rows>[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Measure:nk]</rows>
+        <cols>[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Facility:nk]</cols>
+      </table>
+    </worksheet>
+    <worksheet name='Sheet 4'>
+      <table>
+        <view>
+          <datasources>
+            <datasource caption='Sheet1 (currentNHSNData)' name='federated.0psocvp0oxlaz017zj0cs141e5fj' />
+          </datasources>
+          <datasource-dependencies datasource='federated.0psocvp0oxlaz017zj0cs141e5fj'>
+            <column caption='Calculation1' datatype='date' name='[Calculation_2762676911144460289]' role='dimension' type='ordinal'>
+              <calculation class='tableau' formula='{MAX([Date])}' />
+            </column>
+            <column datatype='date' name='[Date]' role='dimension' type='ordinal' />
+            <column datatype='real' name='[Denominator]' role='measure' type='quantitative' />
+            <column datatype='string' name='[Facility]' role='dimension' type='nominal' />
+            <column datatype='string' name='[Measure]' role='dimension' type='nominal' />
+            <column datatype='integer' name='[Numerator]' role='measure' type='quantitative' />
+            <column datatype='string' name='[Procedure]' role='dimension' type='nominal' />
+            <column-instance column='[winCumZScore]' derivation='Attribute' name='[attr:winCumZScore:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[Calculation_2762676911144460289]' derivation='Month' name='[mn:Calculation_2762676911144460289:ok]' pivot='key' type='ordinal' />
+            <column-instance column='[Date]' derivation='None' name='[none:Date:ok]' pivot='key' type='ordinal' />
+            <column-instance column='[Facility]' derivation='None' name='[none:Facility:nk]' pivot='key' type='nominal' />
+            <column-instance column='[Measure]' derivation='None' name='[none:Measure:nk]' pivot='key' type='nominal' />
+            <column-instance column='[Procedure]' derivation='None' name='[none:Procedure:nk]' pivot='key' type='nominal' />
+            <column-instance column='[Denominator]' derivation='Sum' name='[sum:Denominator:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[Numerator]' derivation='Sum' name='[sum:Numerator:qk]' pivot='key' type='quantitative' />
+            <column caption='Win Cum Z Score' datatype='real' name='[winCumZScore]' role='measure' type='quantitative' />
+            <column-instance column='[Calculation_2762676911144460289]' derivation='Year' name='[yr:Calculation_2762676911144460289:ok]' pivot='key' type='ordinal' />
+          </datasource-dependencies>
+          <filter class='categorical' column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Date:ok]'>
+            <groupfilter function='member' level='[none:Date:ok]' member='#2019-06-01#' user:ui-domain='relevant' user:ui-enumeration='inclusive' user:ui-marker='enumerate' />
+            <preset type='last-values' />
+          </filter>
+          <filter class='categorical' column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Facility:nk]'>
+            <groupfilter from='&quot;SV Anderson&quot;' function='range' level='[none:Facility:nk]' to='&quot;SV Kokomo&quot;' user:ui-domain='relevant' user:ui-enumeration='inclusive' user:ui-marker='enumerate' />
+          </filter>
+          <filter class='categorical' column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Procedure:nk]'>
+            <groupfilter function='member' level='[none:Procedure:nk]' member='&quot;FALSE&quot;' user:ui-domain='relevant' user:ui-enumeration='inclusive' user:ui-marker='enumerate' />
+          </filter>
+          <slices>
+            <column>[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Date:ok]</column>
+            <column>[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Procedure:nk]</column>
+            <column>[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Facility:nk]</column>
+          </slices>
+          <aggregation value='true' />
+        </view>
+        <style>
+          <style-rule element='cell'>
+            <format attr='width' field='[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Facility:nk]' value='100' />
+          </style-rule>
+        </style>
+        <panes>
+          <pane selection-relaxation-option='selection-relaxation-allow'>
+            <view>
+              <breakdown value='auto' />
+            </view>
+            <mark class='Automatic' />
+            <encodings>
+              <tooltip column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:Numerator:qk]' />
+              <tooltip column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:Denominator:qk]' />
+              <text column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[attr:winCumZScore:qk]' />
+            </encodings>
+            <style>
+              <style-rule element='mark'>
+                <format attr='mark-labels-show' value='true' />
+              </style-rule>
+              <style-rule element='pane'>
+                <format attr='minwidth' value='-1' />
+                <format attr='maxwidth' value='-1' />
+              </style-rule>
+            </style>
+          </pane>
+        </panes>
+        <rows>([federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Measure:nk] / ([federated.0psocvp0oxlaz017zj0cs141e5fj].[yr:Calculation_2762676911144460289:ok] / [federated.0psocvp0oxlaz017zj0cs141e5fj].[mn:Calculation_2762676911144460289:ok]))</rows>
+        <cols>[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Facility:nk]</cols>
+      </table>
+    </worksheet>
+    <worksheet name='Sheet 5'>
+      <table>
+        <view>
+          <datasources>
+            <datasource caption='Sheet1 (currentNHSNData)' name='federated.0psocvp0oxlaz017zj0cs141e5fj' />
+          </datasources>
+          <datasource-dependencies datasource='federated.0psocvp0oxlaz017zj0cs141e5fj'>
+            <column datatype='date' name='[Date]' role='dimension' type='ordinal' />
+            <column datatype='string' name='[Facility]' role='dimension' type='nominal' />
+            <column datatype='string' name='[Measure]' role='dimension' type='nominal' />
+            <column-instance column='[Date]' derivation='None' name='[none:Date:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[Facility]' derivation='None' name='[none:Facility:nk]' pivot='key' type='nominal' />
+            <column-instance column='[Measure]' derivation='None' name='[none:Measure:nk]' pivot='key' type='nominal' />
+            <column-instance column='[winCumZScore]' derivation='Sum' name='[sum:winCumZScore:qk]' pivot='key' type='quantitative' />
+            <column caption='Win Cum Z Score' datatype='real' name='[winCumZScore]' role='measure' type='quantitative' />
+          </datasource-dependencies>
+          <filter class='quantitative' column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Date:qk]' included-values='in-range'>
+            <min>#2018-07-01#</min>
+            <max>#2019-06-01#</max>
+          </filter>
+          <filter class='categorical' column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Facility:nk]'>
+            <groupfilter from='&quot;SV Anderson&quot;' function='range' level='[none:Facility:nk]' to='&quot;SV Kokomo&quot;' user:ui-domain='relevant' user:ui-enumeration='inclusive' user:ui-marker='enumerate' />
+          </filter>
+          <manual-sort column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Facility:nk]' direction='ASC'>
+            <dictionary>
+              <bucket>&quot;SV Indianapolis&quot;</bucket>
+              <bucket>&quot;SV Evansville&quot;</bucket>
+              <bucket>&quot;SV Anderson&quot;</bucket>
+              <bucket>&quot;SV Kokomo&quot;</bucket>
+              <bucket>&quot;SV Heart Center&quot;</bucket>
+              <bucket>&quot;SV Carmel&quot;</bucket>
+              <bucket>&quot;SV Fishers&quot;</bucket>
+            </dictionary>
+          </manual-sort>
+          <manual-sort column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Measure:nk]' direction='ASC'>
+            <dictionary>
+              <bucket>&quot;CAUTI&quot;</bucket>
+              <bucket>&quot;CDIFF&quot;</bucket>
+              <bucket>&quot;CLABSI&quot;</bucket>
+              <bucket>&quot;MRSA&quot;</bucket>
+              <bucket>&quot;SSI&quot;</bucket>
+            </dictionary>
+          </manual-sort>
+          <slices>
+            <column>[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Date:qk]</column>
+            <column>[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Facility:nk]</column>
+          </slices>
+          <aggregation value='true' />
+        </view>
+        <style>
+          <style-rule element='cell'>
+            <format attr='width' field='[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Facility:nk]' value='95' />
+          </style-rule>
+        </style>
+        <panes>
+          <pane selection-relaxation-option='selection-relaxation-allow'>
+            <view>
+              <breakdown value='auto' />
+            </view>
+            <mark class='Automatic' />
+            <encodings>
+              <text column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:winCumZScore:qk]' />
+            </encodings>
+            <style>
+              <style-rule element='mark'>
+                <format attr='mark-labels-show' value='true' />
+              </style-rule>
+              <style-rule element='pane'>
+                <format attr='minwidth' value='-1' />
+                <format attr='maxwidth' value='-1' />
+              </style-rule>
+            </style>
+          </pane>
+        </panes>
+        <rows>[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Measure:nk]</rows>
+        <cols>[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Facility:nk]</cols>
+      </table>
+    </worksheet>
+    <worksheet name='ZScoreByTime'>
+      <table>
+        <view>
+          <datasources>
+            <datasource caption='Sheet1 (currentNHSNData)' name='federated.0psocvp0oxlaz017zj0cs141e5fj' />
+          </datasources>
+          <datasource-dependencies datasource='federated.0psocvp0oxlaz017zj0cs141e5fj'>
+            <column caption='IsZScoreEqualWinsor' datatype='boolean' name='[Calculation_1196550139351998464]' role='dimension' type='nominal'>
+              <calculation class='tableau' formula='IF [ZScore] = [winZScore] THEN TRUE&#13;&#10;ELSE FALSE&#13;&#10;END' />
+            </column>
+            <column datatype='date' name='[Date]' role='dimension' type='ordinal' />
+            <column datatype='real' name='[Denominator]' role='measure' type='quantitative' />
+            <column datatype='date' name='[F1]' role='dimension' type='ordinal' />
+            <column datatype='string' name='[Facility]' role='dimension' type='nominal' />
+            <column datatype='string' name='[Measure]' role='dimension' type='nominal' />
+            <column datatype='integer' name='[Numerator]' role='measure' type='quantitative' />
+            <column caption='Pptd' datatype='real' name='[PPTD]' role='measure' type='quantitative' />
+            <column datatype='string' name='[Procedure]' role='dimension' type='nominal' />
+            <column caption='Z Score' datatype='real' name='[ZScore]' role='measure' type='quantitative' />
+            <column-instance column='[winCumZScore]' derivation='Attribute' name='[attr:winCumZScore:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[Calculation_1196550139351998464]' derivation='None' name='[none:Calculation_1196550139351998464:nk]' pivot='key' type='nominal' />
+            <column-instance column='[Date]' derivation='None' name='[none:Date:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[F1]' derivation='None' name='[none:F1:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[Facility]' derivation='None' name='[none:Facility:nk]' pivot='key' type='nominal' />
+            <column-instance column='[Measure]' derivation='None' name='[none:Measure:nk]' pivot='key' type='nominal' />
+            <column-instance column='[Procedure]' derivation='None' name='[none:Procedure:nk]' pivot='key' type='nominal' />
+            <column-instance column='[Denominator]' derivation='Sum' name='[sum:Denominator:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[Numerator]' derivation='Sum' name='[sum:Numerator:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[PPTD]' derivation='Sum' name='[sum:PPTD:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[ZScore]' derivation='Sum' name='[sum:ZScore:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[winCumZScore]' derivation='Sum' name='[sum:winCumZScore:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[winZScore]' derivation='Sum' name='[sum:winZScore:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[F1]' derivation='Month-Trunc' name='[tmn:F1:qk]' pivot='key' type='quantitative' />
+            <column caption='Win Cum Z Score' datatype='real' name='[winCumZScore]' role='measure' type='quantitative' />
+            <column caption='Win Z Score' datatype='real' name='[winZScore]' role='measure' type='quantitative' />
+          </datasource-dependencies>
+          <filter class='quantitative' column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Date:qk]' filter-group='4' included-values='in-range'>
+            <min>#2017-07-01#</min>
+            <max>#2019-06-01#</max>
+          </filter>
+          <filter class='quantitative' column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:F1:qk]' included-values='in-range-or-null'>
+            <min>#2018-04-17#</min>
+            <max>#2019-06-01#</max>
+          </filter>
+          <filter class='categorical' column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Facility:nk]' filter-group='3'>
+            <groupfilter function='member' level='[none:Facility:nk]' member='&quot;SV Kokomo&quot;' user:ui-domain='relevant' user:ui-enumeration='inclusive' user:ui-marker='enumerate' />
+          </filter>
+          <filter class='categorical' column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Measure:nk]' filter-group='5'>
+            <groupfilter from='&quot;CAUTI&quot;' function='range' level='[none:Measure:nk]' to='&quot;SSI&quot;' user:ui-domain='relevant' user:ui-enumeration='inclusive' user:ui-marker='enumerate' />
+          </filter>
+          <filter class='categorical' column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Procedure:nk]' filter-group='7'>
+            <groupfilter function='member' level='[none:Procedure:nk]' member='&quot;FALSE&quot;' user:ui-domain='relevant' user:ui-enumeration='inclusive' user:ui-marker='enumerate' />
+          </filter>
+          <slices>
+            <column>[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Facility:nk]</column>
+            <column>[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Measure:nk]</column>
+            <column>[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Date:qk]</column>
+            <column>[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Procedure:nk]</column>
+            <column>[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:F1:qk]</column>
+          </slices>
+          <aggregation value='true' />
+        </view>
+        <style>
+          <style-rule element='axis'>
+            <encoding attr='space' class='0' field='[federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:winZScore:qk]' field-type='quantitative' fold='true' scope='rows' type='space' />
+            <format attr='display' class='0' field='[federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:winZScore:qk]' scope='rows' value='false' />
+            <format attr='title' class='0' field='[federated.0psocvp0oxlaz017zj0cs141e5fj].[attr:winCumZScore:qk]' scope='rows' value='Z Score (Lower = Better)' />
+            <format attr='title' class='0' field='[federated.0psocvp0oxlaz017zj0cs141e5fj].[tmn:F1:qk]' scope='cols' value='Date' />
+          </style-rule>
+          <style-rule element='legend'>
+            <format attr='col-width' field='[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Calculation_1196550139351998464:nk]' value='60' />
+          </style-rule>
+        </style>
+        <panes>
+          <pane selection-relaxation-option='selection-relaxation-allow'>
+            <view>
+              <breakdown value='auto' />
+            </view>
+            <mark class='Automatic' />
+            <encodings>
+              <tooltip column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:Numerator:qk]' />
+              <tooltip column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:Denominator:qk]' />
+              <tooltip column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:winCumZScore:qk]' />
+              <tooltip column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:winZScore:qk]' />
+              <tooltip column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:PPTD:qk]' />
+              <tooltip column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:ZScore:qk]' />
+            </encodings>
+          </pane>
+          <pane id='1' selection-relaxation-option='selection-relaxation-allow' y-axis-name='[federated.0psocvp0oxlaz017zj0cs141e5fj].[attr:winCumZScore:qk]'>
+            <view>
+              <breakdown value='auto' />
+            </view>
+            <mark class='Automatic' />
+            <mark-sizing mark-sizing-setting='marks-scaling-off' />
+            <encodings>
+              <color column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[:Measure Names]' />
+              <tooltip column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:Numerator:qk]' />
+              <tooltip column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:Denominator:qk]' />
+              <tooltip column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:winCumZScore:qk]' />
+              <tooltip column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:winZScore:qk]' />
+              <tooltip column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:PPTD:qk]' />
+              <tooltip column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:ZScore:qk]' />
+            </encodings>
+            <style>
+              <style-rule element='mark'>
+                <format attr='size' value='0.82359117269515991' />
+              </style-rule>
+            </style>
+          </pane>
+          <pane id='2' selection-relaxation-option='selection-relaxation-allow' y-axis-name='[federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:winZScore:qk]'>
+            <view>
+              <breakdown value='auto' />
+            </view>
+            <mark class='Shape' />
+            <mark-sizing mark-sizing-setting='marks-scaling-off' />
+            <encodings>
+              <color column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Calculation_1196550139351998464:nk]' />
+              <tooltip column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:Numerator:qk]' />
+              <tooltip column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:Denominator:qk]' />
+              <tooltip column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:winCumZScore:qk]' />
+              <tooltip column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:winZScore:qk]' />
+              <tooltip column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:PPTD:qk]' />
+              <tooltip column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:ZScore:qk]' />
+            </encodings>
+            <style>
+              <style-rule element='mark'>
+                <format attr='size' value='0.47176796197891235' />
+              </style-rule>
+            </style>
+          </pane>
+        </panes>
+        <rows>([federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Measure:nk] * ([federated.0psocvp0oxlaz017zj0cs141e5fj].[attr:winCumZScore:qk] + [federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:winZScore:qk]))</rows>
+        <cols>[federated.0psocvp0oxlaz017zj0cs141e5fj].[tmn:F1:qk]</cols>
+      </table>
+    </worksheet>
+  </worksheets>
+  <dashboards>
+    <dashboard name='HAC Scorecard'>
+      <style />
+      <size maxheight='800' maxwidth='1000' minheight='800' minwidth='1000' />
+      <datasources>
+        <datasource caption='Sheet1 (currentNHSNData)' name='federated.0psocvp0oxlaz017zj0cs141e5fj' />
+      </datasources>
+      <datasource-dependencies datasource='federated.0psocvp0oxlaz017zj0cs141e5fj'>
+        <column datatype='date' name='[Date]' role='dimension' type='ordinal' />
+        <column datatype='string' name='[Facility]' role='dimension' type='nominal' />
+        <column datatype='string' name='[Measure]' role='dimension' type='nominal' />
+        <column-instance column='[Date]' derivation='None' name='[none:Date:qk]' pivot='key' type='quantitative' />
+        <column-instance column='[Facility]' derivation='None' name='[none:Facility:nk]' pivot='key' type='nominal' />
+        <column-instance column='[Measure]' derivation='None' name='[none:Measure:nk]' pivot='key' type='nominal' />
+      </datasource-dependencies>
+      <zones>
+        <zone h='100000' id='2' type='layout-basic' w='100000' x='0' y='0'>
+          <zone h='63000' id='13' param='horz' type='layout-flow' w='98400' x='800' y='1000'>
+            <zone h='63000' id='10' param='horz' type='layout-flow' w='98400' x='800' y='1000'>
+              <zone h='63000' id='5' param='vert' type='layout-flow' w='98400' x='800' y='1000'>
+                <zone h='63000' id='1' param='horz' type='layout-flow' w='98400' x='800' y='1000'>
+                  <zone h='63000' id='3' param='horz' type='layout-flow' w='98400' x='800' y='1000'>
+                    <zone h='63000' id='6' type='layout-basic' w='98400' x='800' y='1000'>
+                      <zone h='6496' id='7' type='title' w='19600' x='800' y='1000'>
+                        <zone-style>
+                          <format attr='border-color' value='#000000' />
+                          <format attr='border-style' value='none' />
+                          <format attr='border-width' value='0' />
+                          <format attr='margin' value='4' />
+                        </zone-style>
+                      </zone>
+                      <zone h='56504' id='29' name='ZScoreByTime' show-title='false' w='98400' x='800' y='7496'>
+                        <zone-style>
+                          <format attr='border-color' value='#000000' />
+                          <format attr='border-style' value='none' />
+                          <format attr='border-width' value='0' />
+                          <format attr='margin' value='4' />
+                        </zone-style>
+                      </zone>
+                      <zone h='6496' id='28' name='DataTable' param='[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Date:qk]' show-domain='false' show-null-ctrls='false' type='filter' w='50400' x='48800' y='1000'>
+                        <zone-style>
+                          <format attr='border-color' value='#000000' />
+                          <format attr='border-style' value='none' />
+                          <format attr='border-width' value='0' />
+                          <format attr='margin' value='4' />
+                        </zone-style>
+                      </zone>
+                      <zone h='6496' id='30' mode='checkdropdown' name='ZScoreByTime' param='[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Measure:nk]' show-all='false' type='filter' w='15500' x='33300' y='1000'>
+                        <zone-style>
+                          <format attr='border-color' value='#000000' />
+                          <format attr='border-style' value='none' />
+                          <format attr='border-width' value='0' />
+                          <format attr='margin' value='4' />
+                        </zone-style>
+                      </zone>
+                      <zone h='6496' id='31' mode='dropdown' name='ZScoreByTime' param='[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Facility:nk]' show-all='false' type='filter' w='12900' x='20400' y='1000'>
+                        <zone-style>
+                          <format attr='border-color' value='#000000' />
+                          <format attr='border-style' value='none' />
+                          <format attr='border-width' value='0' />
+                          <format attr='margin' value='4' />
+                        </zone-style>
+                      </zone>
+                    </zone>
+                  </zone>
+                </zone>
+              </zone>
+            </zone>
+          </zone>
+          <zone h='35000' id='23' param='horz' type='layout-flow' w='25300' x='800' y='64000'>
+            <zone fixed-size='195' h='35000' id='24' is-fixed='true' param='vert' type='layout-flow' w='25300' x='800' y='64000'>
+              <zone fixed-size='28' h='4500' id='32' is-fixed='true' leg-item-layout='horz' name='ZScoreByTime' pane-specification-id='2' param='[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Calculation_1196550139351998464:nk]' type='color' w='25300' x='800' y='64000'>
+                <zone-style>
+                  <format attr='border-color' value='#000000' />
+                  <format attr='border-style' value='none' />
+                  <format attr='border-width' value='0' />
+                  <format attr='margin' value='4' />
+                </zone-style>
+              </zone>
+              <zone fixed-size='137' h='18125' id='20' is-fixed='true' name='PercentileGrid' show-title='false' w='25300' x='800' y='68500'>
+                <layout-cache fixed-size-w='182' type-h='fixed' type-w='fixed' />
+                <zone-style>
+                  <format attr='border-color' value='#000000' />
+                  <format attr='border-style' value='none' />
+                  <format attr='border-width' value='0' />
+                  <format attr='margin' value='4' />
+                </zone-style>
+              </zone>
+              <zone fixed-size='59' h='8375' id='26' is-fixed='true' leg-item-layout='grid' name='DataTable' pane-specification-id='0' param='[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Calculation_1196550139353632772:nk]' type='color' w='25300' x='800' y='86625'>
+                <zone-style>
+                  <format attr='border-color' value='#000000' />
+                  <format attr='border-style' value='none' />
+                  <format attr='border-width' value='0' />
+                  <format attr='margin' value='4' />
+                </zone-style>
+              </zone>
+            </zone>
+          </zone>
+          <zone h='35000' id='25' name='DataTable' show-title='false' w='73100' x='26100' y='64000'>
+            <zone-style>
+              <format attr='border-color' value='#000000' />
+              <format attr='border-style' value='none' />
+              <format attr='border-width' value='0' />
+              <format attr='margin' value='4' />
+            </zone-style>
+          </zone>
+          <zone-style>
+            <format attr='border-color' value='#000000' />
+            <format attr='border-style' value='none' />
+            <format attr='border-width' value='0' />
+            <format attr='margin' value='8' />
+          </zone-style>
+        </zone>
+      </zones>
+    </dashboard>
+  </dashboards>
+  <windows source-height='30'>
+    <window class='worksheet' name='ZScoreByTime'>
+      <cards>
+        <edge name='left'>
+          <strip size='160'>
+            <card type='pages' />
+            <card type='filters' />
+            <card type='marks' />
+          </strip>
+        </edge>
+        <edge name='top'>
+          <strip size='2147483647'>
+            <card type='columns' />
+          </strip>
+          <strip size='2147483647'>
+            <card type='rows' />
+          </strip>
+        </edge>
+        <edge name='right'>
+          <strip size='160'>
+            <card param='[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Date:qk]' show-domain='false' show-null-ctrls='false' type='filter' />
+            <card mode='checkdropdown' param='[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Measure:nk]' show-all='false' type='filter' />
+            <card mode='dropdown' param='[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Facility:nk]' show-all='false' type='filter' />
+            <card pane-specification-id='2' param='[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Calculation_1196550139351998464:nk]' type='color' />
+          </strip>
+        </edge>
+      </cards>
+      <simple-id uuid='{B967FA4B-74E4-4129-8F5B-C3126A313E71}' />
+    </window>
+    <window class='worksheet' name='PercentileGrid'>
+      <cards>
+        <edge name='left'>
+          <strip size='160'>
+            <card type='pages' />
+            <card type='filters' />
+            <card type='marks' />
+          </strip>
+        </edge>
+        <edge name='top'>
+          <strip size='2147483647'>
+            <card type='columns' />
+          </strip>
+          <strip size='2147483647'>
+            <card type='rows' />
+          </strip>
+        </edge>
+        <edge name='right'>
+          <strip size='160'>
+            <card pane-specification-id='0' param='[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Calculation_1196550139353632772:nk]' type='color' />
+          </strip>
+        </edge>
+      </cards>
+      <simple-id uuid='{4B2A544A-8BBC-4740-A8B0-B8AED8FF7982}' />
+    </window>
+    <window class='worksheet' name='DataTable'>
+      <cards>
+        <edge name='left'>
+          <strip size='160'>
+            <card type='pages' />
+            <card type='filters' />
+            <card type='marks' />
+            <card type='measures' />
+          </strip>
+        </edge>
+        <edge name='top'>
+          <strip size='2147483647'>
+            <card type='columns' />
+          </strip>
+          <strip size='2147483647'>
+            <card type='rows' />
+          </strip>
+        </edge>
+        <edge name='right'>
+          <strip size='160'>
+            <card pane-specification-id='0' param='[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Calculation_1196550139353632772:nk]' type='color' />
+          </strip>
+        </edge>
+      </cards>
+      <simple-id uuid='{12D46F5C-1221-42D6-87C1-04A0F23EB63F}' />
+    </window>
+    <window class='dashboard' name='HAC Scorecard'>
+      <viewpoints>
+        <viewpoint name='DataTable' />
+        <viewpoint name='PercentileGrid' />
+        <viewpoint name='ZScoreByTime'>
+          <zoom type='entire-view' />
+        </viewpoint>
+      </viewpoints>
+      <active id='31' />
+      <simple-id uuid='{FCAA6580-64E7-4685-AD47-0172E159E8C4}' />
+    </window>
+    <window class='worksheet' name='Sheet 4'>
+      <cards>
+        <edge name='left'>
+          <strip size='160'>
+            <card type='pages' />
+            <card type='filters' />
+            <card type='marks' />
+          </strip>
+        </edge>
+        <edge name='top'>
+          <strip size='2147483647'>
+            <card type='columns' />
+          </strip>
+          <strip size='2147483647'>
+            <card type='rows' />
+          </strip>
+          <strip size='31'>
+            <card type='title' />
+          </strip>
+        </edge>
+      </cards>
+      <simple-id uuid='{99F1A1B4-8E3B-462B-B15B-EBC9FBDFACCD}' />
+    </window>
+    <window class='worksheet' maximized='true' name='Sheet 5'>
+      <cards>
+        <edge name='left'>
+          <strip size='160'>
+            <card type='pages' />
+            <card type='filters' />
+            <card type='marks' />
+          </strip>
+        </edge>
+        <edge name='top'>
+          <strip size='2147483647'>
+            <card type='columns' />
+          </strip>
+          <strip size='2147483647'>
+            <card type='rows' />
+          </strip>
+          <strip size='31'>
+            <card type='title' />
+          </strip>
+        </edge>
+        <edge name='right'>
+          <strip size='160'>
+            <card param='[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Date:qk]' show-domain='false' show-null-ctrls='false' type='filter' />
+          </strip>
+        </edge>
+      </cards>
+      <simple-id uuid='{4ED78A6E-22BA-4169-8C87-19756DAA3F8E}' />
+    </window>
+  </windows>
+</workbook>
