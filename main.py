@@ -28,8 +28,10 @@ class HacFileManagement:
         self.checkDirectory(self.newDataDirectory)
         self.checkDirectory(self.processedDataDirectory)
 
-        self.newDatafile = "latestNHSNData"
+        self.newDatafile = "newestNHSNData"
         self.currentDataFile = "currentNHSNData"
+
+        self.currentMonthDirectory = self.createMonthDir()
 
         return super().__init__()
     
@@ -49,15 +51,11 @@ class HacFileManagement:
 
         return monthDir
 
-    def moveFiles(self):
-        files = os.listdir(self.newDataDirectory)
-        dst = self.createMonthDir()
-
-        for f in files:
-            try:
-                shutil.move(join(self.newDataDirectory,f), dst)
-            except FileExistsError:
-                print(FileExistsError)
+    def moveFile(path,filename,dst):
+        try:
+            shutil.move(join(path,filename), dst)
+        except:
+            print("Error moving {} to {}.".format(filename,dst))
     
     # Export functions
     def exportToExcel(self,dataframe,path,filename):
@@ -477,6 +475,7 @@ class CompareFiles(HacFileManagement):
         
         self.exportToExcel(outDF,self.mainDirectory,self.currentDataFile)
         self.exportToPickle(outDF,self.mainDirectory,self.currentDataFile)
+        self.moveFile(self.mainDirectory,self.newDatafile,self.currentMonthDirectory)
 
 def main():
     def getAttributes():
@@ -550,8 +549,6 @@ def main():
     hac = CalculateHACData(ps,m,f)
 
     return hac
-
-    #directory.moveFiles()
 
 if __name__ == "__main__":
     hac= main()

@@ -737,13 +737,13 @@
           </datasources>
           <datasource-dependencies datasource='federated.0psocvp0oxlaz017zj0cs141e5fj'>
             <column datatype='date' name='[Date]' role='dimension' type='ordinal' />
+            <column datatype='real' name='[Denominator]' role='measure' type='quantitative' />
             <column datatype='string' name='[Facility]' role='dimension' type='nominal' />
             <column datatype='string' name='[Measure]' role='dimension' type='nominal' />
             <column-instance column='[Date]' derivation='None' name='[none:Date:qk]' pivot='key' type='quantitative' />
             <column-instance column='[Facility]' derivation='None' name='[none:Facility:nk]' pivot='key' type='nominal' />
             <column-instance column='[Measure]' derivation='None' name='[none:Measure:nk]' pivot='key' type='nominal' />
-            <column-instance column='[winCumZScore]' derivation='Sum' name='[sum:winCumZScore:qk]' pivot='key' type='quantitative' />
-            <column caption='Win Cum Z Score' datatype='real' name='[winCumZScore]' role='measure' type='quantitative' />
+            <column-instance column='[Denominator]' derivation='Sum' name='[sum:Denominator:qk]' pivot='key' type='quantitative' />
           </datasource-dependencies>
           <filter class='quantitative' column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Date:qk]' included-values='in-range'>
             <min>#2018-07-01#</min>
@@ -781,6 +781,7 @@
         <style>
           <style-rule element='cell'>
             <format attr='width' field='[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Facility:nk]' value='95' />
+            <format attr='text-format' field='[federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:Denominator:qk]' value='n#,##0.000;-#,##0.000' />
           </style-rule>
         </style>
         <panes>
@@ -790,7 +791,7 @@
             </view>
             <mark class='Automatic' />
             <encodings>
-              <text column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:winCumZScore:qk]' />
+              <text column='[federated.0psocvp0oxlaz017zj0cs141e5fj].[sum:Denominator:qk]' />
             </encodings>
             <style>
               <style-rule element='mark'>
@@ -1139,7 +1140,7 @@
       </cards>
       <simple-id uuid='{12D46F5C-1221-42D6-87C1-04A0F23EB63F}' />
     </window>
-    <window class='dashboard' name='HAC Scorecard'>
+    <window class='dashboard' maximized='true' name='HAC Scorecard'>
       <viewpoints>
         <viewpoint name='DataTable' />
         <viewpoint name='PercentileGrid' />
@@ -1173,7 +1174,7 @@
       </cards>
       <simple-id uuid='{99F1A1B4-8E3B-462B-B15B-EBC9FBDFACCD}' />
     </window>
-    <window class='worksheet' maximized='true' name='Sheet 5'>
+    <window class='worksheet' name='Sheet 5'>
       <cards>
         <edge name='left'>
           <strip size='160'>
