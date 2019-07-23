@@ -11,6 +11,8 @@ numpy = "*"
 pickle = "*"
 scipy = "*"
 datetime = "*"
+sys = "*"
+flask = "*"
 
 [requires]
 python_version = "3.7"

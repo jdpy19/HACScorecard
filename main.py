@@ -17,7 +17,7 @@ import sys
 import shutil
 import datetime as dt
 
-class HacFileManagement:
+class FileManagement:
     def __init__(self):
         self.path = os.getcwd()
         self.mainDirectory = join(self.path,"HACScorecardData")
@@ -51,12 +51,15 @@ class HacFileManagement:
 
         return monthDir
 
-    def moveFile(path,filename,dst):
+    def moveFile(self,path,filename,dst):
         try:
-            shutil.move(join(path,filename), dst)
+            print("Trying to move {}...".format(filename))
+            shutil.move(join(path,filename+".xlsx"), dst)
         except:
-            print("Error moving {} to {}.".format(filename,dst))
-    
+            print("Failure.")
+        else:
+            print("Success!")
+
     # Export functions
     def exportToExcel(self,dataframe,path,filename):
         try:
@@ -103,147 +106,22 @@ class HacFileManagement:
         
         return dataframe
 
-class CalculateHACData(HacFileManagement):
-    def __init__(self,popStats,facilities,measures):
+class DataManagement(FileManagement):
+    def __init__(self,facilities,measures):
         super().__init__()
 
-        self.popStats = popStats
         self.facilities = facilities
         self.measures = measures
-        
-        self.raw_data = pd.DataFrame()
+
+        self.raw_data = self.importFromExcel(self.mainDirectory,self.currentDataFile)
         self.clean_data = pd.DataFrame()
         self.output_data = pd.DataFrame()
 
-        self.tryToFindData()
         self.cleanRawData()
-        self.runCalculations(self.facilities,self.measures)
+        self.findMissingData()
 
-    # Calculations
-    def calcAttributes(self,filteredData,period,measure,procedure):
-        
-        ## Helper functions ##
-        def calculateSIR(df):
-            df["Score"] =  df["Numerator"] / df["Denominator"]
-            df["Score"] = df["Score"].replace(np.inf,0)
-        
-            return df
-
-        def calculatePPTD(df, period):
-            # Calculate Performance Period To Date
-            df["PPTD_NUM"] = 0.0
-            df["PPTD_DEN"] = -1.0
-
-            if period == "CY":
-                df["PPTD_NUM"] = df.groupby(df.index.year)["Numerator"].cumsum()
-                df["PPTD_DEN"] = df.groupby(df.index.year)["Denominator"].cumsum()
-            elif period == "FY":
-                df["FiscalYear"] = df.index + pd.DateOffset(months=-6)
-                df["PPTD_NUM"] = df.groupby(df.FiscalYear.dt.year)["Numerator"].cumsum()
-                df["PPTD_DEN"] = df.groupby(df.FiscalYear.dt.year)["Denominator"].cumsum()
-                df = df.drop(["FiscalYear"],axis=1)
-            elif period == "ROLL":
-                m = df.iloc[-1].Month.month # Error is occuring when Ministry == All Ministries
-                df["Roll"] = df.index + pd.DateOffset(months=-m)
-                df["PPTD_NUM"] = df.groupby(df.Roll.dt.year)["Numerator"].cumsum()
-                df["PPTD_DEN"] = df.groupby(df.Roll.dt.year)["Denominator"].cumsum()
-                df =df.drop(["Roll"],axis=1)
-            else:
-                print("Performance Period type not recognized.")
-
-            df["PPTD"] = df["PPTD_NUM"] / df["PPTD_DEN"]
-
-            return df
-
-        def calculateResidual():
-            #avgDen = df["Denominator"].mean()
-                #df["ResidualVBP"] = round((df["VBP Target"]*(df["PPTD_DEN"] + avgDen*(12-df.FiscalYear.dt.month))) - df["PPTD_NUM"],0)
-                #df["ProjectedDen"] = round((df["VBP Target"]*(df["PPTD_DEN"] + avgDen*(12-df.FiscalYear.dt.month))),0)
-            pass
-
-        def calculate3MonthAVG(df):
-            # Calculate 3 Month rolling average
-            df["CUMSUM_NUM3"] = df["Numerator"].rolling(window=3,min_periods=1).sum()
-            df["CUMSUM_DEN3"] = df["Denominator"].rolling(window=3,min_periods=1).sum()
-            df["Trend_3"] = df["CUMSUM_NUM3"]/df["CUMSUM_DEN3"]
-
-        def calcZScore(df):
-            # Calculate ZScore, 
-            # Cumulative ZScore,
-            # Winsorized ZScore, 
-            # Cumulative Winsorized ZScore, 
-            # Percentile
-
-            if df["Denominator"].sum() >= 1:
-                stats = self.popStats[measure]
-                minZScore = (stats["topFive"] - stats["mean"]) / stats["std"]
-                maxZScore = (stats["bottomFive"] - stats["mean"]) / stats["std"]
-            
-                df["cumZScore"] = (df["PPTD"] - stats["mean"]) / stats["std"]
-                df["ZScore"] = (df["Score"] - stats["mean"]) / stats["std"]
-
-                df["winCumZScore"] = df["cumZScore"].apply(lambda x: maxZScore if x > maxZScore else (minZScore if x < minZScore else x))
-                df["winZScore"] = df["ZScore"].apply(lambda x: maxZScore if x > maxZScore else (minZScore if x < minZScore else x))
-
-                df["Percentile"] = df["winCumZScore"].apply(lambda x: st.norm.cdf(x))
-            else:
-                df["cumZScore"] = np.nan
-                df["ZScore"] = np.nan
-                df["winCumZScore"] = np.nan
-                df["winZScore"] = np.nan
-                df["Percentile"] = np.nan
-            return df
-
-        ## Clean Data ##
-        filteredData = filteredData.groupby(filteredData["Date"],as_index=True).agg(
-            {
-                "Numerator":"sum",
-                "Denominator":"sum",
-                "Units":"sum",
-                "Facility":"first",
-                "Measure":"first",
-            }
-        )
-        filteredData["Procedure"] = procedure
-
-        ## Run calculations ##
-        filteredData = calcZScore(filteredData)
-        filteredData = calculate3MonthAVG(filteredData)
-        filteredData = calculatePPTD(filteredData,period)
-        filteredData = calcZScore(filteredData)
-        filteredData["Date"] = filteredData.index
-
-        return filteredData
-
-    def runCalculations(self,measures,facilities):
-        y = pd.DataFrame()
-        x = pd.DataFrame()
-        for facility in facilities:
-            for measure in measures:
-                if measure == "SSI":
-                    procedures = [False, "COLO","HYST"]
-                    for procedure in procedures:
-                        x = self.queryCleanData(facility, measure, procedure)
-                        x = self.calcAttributes(x,"FY",measure,procedure)
-
-                        y = pd.concat([y,x],sort=True)
-                        x = None
-                else:
-                    procedure = False
-                    x = self.queryCleanData(facility, measure, procedure)
-                    x = self.calcAttributes(x,"FY",measure,procedure)
-
-                    y = pd.concat([y,x],sort=True)
-                    x = None
-            
-        self.output_data = y
-        y = None
-
-        self.exportToExcel(self.output_data,self.mainDirectory,self.currentDataFile)
-
-    # Cleaning
     def queryCleanData(self,facility,measure,procedure):
-        ## Helper Functions ##
+    ## Helper Functions ##
         def createMask(facility, measure, procedure):
             if procedure:
                 
@@ -293,18 +171,167 @@ class CalculateHACData(HacFileManagement):
         
         self.clean_data = self.clean_data[["Facility","Date","Numerator","Denominator","Units", "Measure","Procedure"]]
 
-    # Retrieve and Store data #
-    def tryToFindData(self):
-        if self.raw_data.empty:
-            print("Trying to retrieve pickle.")
-            self.raw_data = self.importFromPickle(self.mainDirectory,self.currentDataFile)
         
-        if self.raw_data.empty:
-            print("Trying to retrieve Excel Data.")
-            self.raw_data = self.importFromExcel(self.mainDirectory,self.currentDataFile)
 
+    def findDates(self,facility,measure,procedur):
+        df = pd.DataFrame()
+        df = self.queryCleanData(facility, measure, procedure)
+
+        today = dt.datetime.now()
+        last_month = df["Date"].max()
+        print(today - last_month)
+
+        return df
+
+    def findMissingData(self):
+        for facility in self.facilities:
+            for measure in self.measures:
+                if measure == "SSI":
+                    procedures = [False, "COLO","HYST"]
+                    for procedure in procedures:
+                        x = findDates(facility,measure,procedure)
+                        y = pd.concat([y,x],sort=True)
+                        x = None
+                else:
+                    procedure = False
+
+                    y = pd.concat([y,x],sort=True)
+                    x = None
+
+class CalculateData(DataManagement):
+    def __init__(self,popStats,facilities,measures):
+        super().__init__(facilities,measures)
+        self.popStats = popStats
+
+        self.runCalculations(self.facilities,self.measures)
+
+    # Calculations
+    def calcAttributes(self,filteredData,period,measure,procedure):
+        
+        ## Helper functions ##
+        def calculateSIR(df):
+            df["Score"] =  df["Numerator"] / df["Denominator"]
+            df["Score"] = df["Score"].replace(np.inf,0)
+        
+            return df
+
+        def calculatePPTD(df, period):
+            # Calculate Performance Period To Date
+            df["PPTD_NUM"] = 0.0
+            df["PPTD_DEN"] = -1.0
+
+            if period == "CY":
+                df["PPTD_NUM"] = df.groupby(df.index.year)["Numerator"].cumsum()
+                df["PPTD_DEN"] = df.groupby(df.index.year)["Denominator"].cumsum()
+            elif period == "FY":
+                df["FiscalYear"] = df.index + pd.DateOffset(months=-6)
+                df["PPTD_NUM"] = df.groupby(df.FiscalYear.dt.year)["Numerator"].cumsum()
+                df["PPTD_DEN"] = df.groupby(df.FiscalYear.dt.year)["Denominator"].cumsum()
+                df = df.drop(["FiscalYear"],axis=1)
+            elif period == "ROLL":
+                m = df.iloc[-1].Month.month # Error is occuring when Ministry == All Ministries
+                df["Roll"] = df.index + pd.DateOffset(months=-m)
+                df["PPTD_NUM"] = df.groupby(df.Roll.dt.year)["Numerator"].cumsum()
+                df["PPTD_DEN"] = df.groupby(df.Roll.dt.year)["Denominator"].cumsum()
+                df =df.drop(["Roll"],axis=1)
+            else:
+                print("Performance Period type not recognized.")
+
+            df["PPTD"] = df["PPTD_NUM"] / df["PPTD_DEN"]
+
+            return df
+
+        def calculateResidual():
+            #avgDen = df["Denominator"].mean()
+                #df["ResidualVBP"] = round((df["VBP Target"]*(df["PPTD_DEN"] + avgDen*(12-df.FiscalYear.dt.month))) - df["PPTD_NUM"],0)
+                #df["ProjectedDen"] = round((df["VBP Target"]*(df["PPTD_DEN"] + avgDen*(12-df.FiscalYear.dt.month))),0)
+            pass
+
+        def calculate3MonthAVG(df):
+            # Calculate 3 Month rolling average
+            df["CUMSUM_NUM3"] = df["Numerator"].rolling(window=3,min_periods=1).sum()
+            df["CUMSUM_DEN3"] = df["Denominator"].rolling(window=3,min_periods=1).sum()
+            df["Trend_3"] = df["CUMSUM_NUM3"]/df["CUMSUM_DEN3"]
+            return df
+
+        def calcZScore(df):
+            # Calculate ZScore, 
+            # Cumulative ZScore,
+            # Winsorized ZScore, 
+            # Cumulative Winsorized ZScore, 
+            # Percentile
+
+            if df["Denominator"].sum() >= 1:
+                stats = self.popStats[measure]
+                minZScore = (stats["topFive"] - stats["mean"]) / stats["std"]
+                maxZScore = (stats["bottomFive"] - stats["mean"]) / stats["std"]
             
-class ExtractNewHACData(HacFileManagement):
+                df["cumZScore"] = (df["PPTD"] - stats["mean"]) / stats["std"]
+                df["ZScore"] = (df["Score"] - stats["mean"]) / stats["std"]
+
+                df["winCumZScore"] = df["cumZScore"].apply(lambda x: maxZScore if x > maxZScore else (minZScore if x < minZScore else x))
+                df["winZScore"] = df["ZScore"].apply(lambda x: maxZScore if x > maxZScore else (minZScore if x < minZScore else x))
+
+                df["Percentile"] = df["winCumZScore"].apply(lambda x: st.norm.cdf(x))
+            else:
+                df["cumZScore"] = np.nan
+                df["ZScore"] = np.nan
+                df["winCumZScore"] = np.nan
+                df["winZScore"] = np.nan
+                df["Percentile"] = np.nan
+            return df
+
+        ## Clean Data ##
+        filteredData = filteredData.groupby(filteredData["Date"],as_index=True).agg(
+            {
+                "Numerator":"sum",
+                "Denominator":"sum",
+                "Units":"sum",
+                "Facility":"first",
+                "Measure":"first",
+            }
+        )
+        filteredData["Procedure"] = procedure
+
+        ## Run calculations ##
+        filteredData = calculateSIR(filteredData)
+        filteredData = calculatePPTD(filteredData,period)
+        filteredData = calculate3MonthAVG(filteredData)
+        filteredData = calcZScore(filteredData)
+        filteredData["Date"] = filteredData.index
+
+        return filteredData
+
+    def queryThenCalculate(self,facility,measure,procedure,period):
+        df = pd.DataFrame()
+        df = self.queryCleanData(facility, measure, procedure)
+        df = self.calcAttributes(df,period,measure,procedure)
+        return df
+
+    def runCalculations(self,measures,facilities):
+        y = pd.DataFrame()
+        for facility in facilities:
+            for measure in measures:
+                if measure == "SSI":
+                    procedures = [False, "COLO","HYST"]
+                    for procedure in procedures:
+                        x = self.queryThenCalculate(facility, measure, procedure,"FY")
+
+                        y = pd.concat([y,x],sort=True)
+                        x = None
+                else:
+                    procedure = False
+                    x = self.queryThenCalculate(facility, measure, procedure,"FY")
+
+                    y = pd.concat([y,x],sort=True)
+                    x = None
+            
+        self.output_data = y
+        y = None
+
+        self.exportToExcel(self.output_data,self.mainDirectory,self.currentDataFile)
+
+class ExtractNewData(FileManagement):
     def __init__(self):
         super().__init__()
 
@@ -440,7 +467,7 @@ class ExtractNewHACData(HacFileManagement):
         self.output_data = pd.concat([self.output_data,output],sort=True)
         output = None
 
-class CompareFiles(HacFileManagement):
+class CompareFiles(FileManagement):
     def __init__(self):
         super().__init__()
         self.getCompareCollate()
@@ -542,16 +569,12 @@ def main():
 
     m,f,ps = getAttributes()
     
-    directory = HacFileManagement()
-    extract = ExtractNewHACData()
+    extract = ExtractNewData()
     compare = CompareFiles()
-
-    hac = CalculateHACData(ps,m,f)
+    hac = CalculateData(ps,f,m)
 
     return hac
 
 if __name__ == "__main__":
     hac= main()
-
-
 #%%
