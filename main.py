@@ -14,8 +14,10 @@ import scipy.stats as st
 import os
 from os.path import join
 import sys
+import math
 import shutil
 import datetime as dt
+from dateutil.relativedelta import *
 
 class FileManagement:
     def __init__(self):
@@ -30,6 +32,7 @@ class FileManagement:
 
         self.newDatafile = "newestNHSNData"
         self.currentDataFile = "currentNHSNData"
+        self.missingDataFile = "missingNHSNData"
 
         self.currentMonthDirectory = self.createMonthDir()
 
@@ -114,26 +117,23 @@ class DataManagement(FileManagement):
         self.measures = measures
 
         self.raw_data = self.importFromExcel(self.mainDirectory,self.currentDataFile)
-        self.clean_data = pd.DataFrame()
+        self.clean_data = self.cleanRawData(self.raw_data)
         self.output_data = pd.DataFrame()
-
-        self.cleanRawData()
+        self.missing_data = pd.DataFrame()
+        
         self.findMissingData()
 
     def queryCleanData(self,facility,measure,procedure):
-    ## Helper Functions ##
+        temp = self.clean_data.copy()
+        temp["Date"] = pd.to_datetime(temp["Date"], errors="coerce")
+        temp = temp.set_index(temp["Date"]).sort_index(ascending=True)
         def createMask(facility, measure, procedure):
             if procedure:
-                
                 mask = (temp["Facility"] == facility) & (temp["Measure"] == measure) & (temp["Procedure"] == procedure)
             else:
                 mask = (temp["Facility"] == facility) & (temp["Measure"] == measure)
 
             return mask
-
-        temp = self.clean_data.copy()
-        temp["Date"] = pd.to_datetime(temp["Date"], errors="coerce")
-        temp = temp.set_index(temp["Date"]).sort_index(ascending=True)
 
         if facility == "All Ministries":
             temp = temp[(temp["Measure"] == measure) & (temp["Facility"] != "All Ministries")] # Want to aggregate large facilities, All Ministries raw data includes regional facilities
@@ -152,58 +152,76 @@ class DataManagement(FileManagement):
 
         return temp
 
-    def cleanRawData(self):
-        self.clean_data = self.raw_data.copy()
-        self.clean_data["Facility"] = self.clean_data["Facility"].replace(np.nan,"None")
+    def cleanRawData(self,df):
+        df["Facility"] = df["Facility"].replace(np.nan,"None")
 
-        self.clean_data = self.clean_data[self.clean_data["Facility"] != "None"]
+        df = df[df["Facility"] != "None"]
         
-        self.clean_data["Numerator"] = pd.to_numeric(self.clean_data["Numerator"])
-        self.clean_data["Numerator"] = self.clean_data["Numerator"].replace(np.nan,0.0)
+        df["Numerator"] = pd.to_numeric(df["Numerator"])
+        df["Numerator"] = df["Numerator"].replace(np.nan,0.0)
 
-        self.clean_data["Denominator"] = pd.to_numeric(self.clean_data["Denominator"])
-        self.clean_data["Denominator"] = self.clean_data["Denominator"].replace(np.nan,0.0)
+        df["Denominator"] = pd.to_numeric(df["Denominator"])
+        df["Denominator"] = df["Denominator"].replace(np.nan,0.0)
         
-        self.clean_data["Units"] = pd.to_numeric(self.clean_data["Units"])
-        self.clean_data["Units"] = self.clean_data["Units"].replace(np.nan,0.0)
+        df["Units"] = pd.to_numeric(df["Units"])
+        df["Units"] = df["Units"].replace(np.nan,0.0)
 
-        self.clean_data["Date"] = self.clean_data["Date"]
+        df["Date"] = df["Date"]
         
-        self.clean_data = self.clean_data[["Facility","Date","Numerator","Denominator","Units", "Measure","Procedure"]]
-
-        
-
-    def findDates(self,facility,measure,procedur):
-        df = pd.DataFrame()
-        df = self.queryCleanData(facility, measure, procedure)
-
-        today = dt.datetime.now()
-        last_month = df["Date"].max()
-        print(today - last_month)
-
+        df = df[["Facility","Date","Numerator","Denominator","Units", "Measure","Procedure"]]
         return df
 
+    def findDates(self,facility,measure,procedure):
+        df = pd.DataFrame()
+
+        df = self.queryCleanData(facility, measure, procedure)
+        
+        missing_dict = []
+        if not df.empty:
+            today = dt.datetime.now()
+            last_month = df["Date"].max()
+            print(measure, facility, procedure)
+            n_missing = math.floor((today - last_month)/np.timedelta64(1,"M"))
+
+            for i in range(1,n_missing):
+                row = {
+                    "Measure": measure,
+                    "Facility": facility,
+                    "Procedure": procedure,
+                    "Date": last_month + relativedelta(months=+i),
+                    "Num": 0,
+                    "Den": df["Denominator"].mean(),
+                    "Units": 0
+                }
+                missing_dict.append(row)
+        
+        return pd.DataFrame.from_dict(missing_dict)
+
     def findMissingData(self):
+        y = pd.DataFrame()
         for facility in self.facilities:
             for measure in self.measures:
                 if measure == "SSI":
                     procedures = [False, "COLO","HYST"]
                     for procedure in procedures:
-                        x = findDates(facility,measure,procedure)
+                        x = self.findDates(facility,measure,procedure)
                         y = pd.concat([y,x],sort=True)
                         x = None
                 else:
                     procedure = False
-
+                    x = self.findDates(facility,measure,procedure)
                     y = pd.concat([y,x],sort=True)
                     x = None
+        self.missing_data = y
+        self.exportToExcel(y,self.mainDirectory,self.missingDataFile)
+        y = None
 
 class CalculateData(DataManagement):
     def __init__(self,popStats,facilities,measures):
         super().__init__(facilities,measures)
         self.popStats = popStats
 
-        self.runCalculations(self.facilities,self.measures)
+        self.runCalculations()
 
     # Calculations
     def calcAttributes(self,filteredData,period,measure,procedure):
@@ -279,6 +297,7 @@ class CalculateData(DataManagement):
                 df["winCumZScore"] = np.nan
                 df["winZScore"] = np.nan
                 df["Percentile"] = np.nan
+
             return df
 
         ## Clean Data ##
@@ -308,10 +327,10 @@ class CalculateData(DataManagement):
         df = self.calcAttributes(df,period,measure,procedure)
         return df
 
-    def runCalculations(self,measures,facilities):
+    def runCalculations(self):
         y = pd.DataFrame()
-        for facility in facilities:
-            for measure in measures:
+        for facility in self.facilities:
+            for measure in self.measures:
                 if measure == "SSI":
                     procedures = [False, "COLO","HYST"]
                     for procedure in procedures:
@@ -325,10 +344,7 @@ class CalculateData(DataManagement):
 
                     y = pd.concat([y,x],sort=True)
                     x = None
-            
         self.output_data = y
-        y = None
-
         self.exportToExcel(self.output_data,self.mainDirectory,self.currentDataFile)
 
 class ExtractNewData(FileManagement):
