@@ -30,7 +30,7 @@ class FileManagement:
         self.checkDirectory(self.newDataDirectory)
         self.checkDirectory(self.processedDataDirectory)
 
-        self.newDatafile = "newestNHSNData" # New data being read in
+        self.newDataFile = "newestNHSNData" # New data being read in
         self.currentDataFile = "toDateNHSNData" # New data + previous set of data
         self.missingDataFile = "missingNHSNData" # Expected but missing data
         self.tableauDataFile = "tableauNHSNData" # toDate + Missing, run calculations
@@ -123,23 +123,17 @@ class DataManagement(FileManagement):
         self.facilities = facilities
         self.measures = measures
 
-
-    def runDataManagement(self):
-        self.raw_data = self.importFromExcel(self.mainDirectory,self.tableauDataFile)
+    def runDataManagement(self,df):
+        self.raw_data = self.importFromExcel(self.mainDirectory,df)
         self.clean_data = self.cleanData(self.raw_data)
-        print(self.clean_data.head(1))
         self.output_data = pd.DataFrame()
-        print(self.output_data.head(1))
-        self.missing_data = pd.DataFrame()
-        
-        self.findMissingData()
 
     def queryCleanData(self,facility,measure,procedure):
         temp = self.clean_data.copy()
         temp["Date"] = pd.to_datetime(temp["Date"], errors="coerce")
         temp = temp.set_index(temp["Date"]).sort_index(ascending=True)
         def createMask(facility, measure, procedure):
-            if procedure:
+            if procedure != "NA":
                 mask = (temp["Facility"] == facility) & (temp["Measure"] == measure) & (temp["Procedure"] == procedure)
             else:
                 mask = (temp["Facility"] == facility) & (temp["Measure"] == measure)
@@ -179,7 +173,6 @@ class DataManagement(FileManagement):
 
     def findDates(self,facility,measure,procedure):
         df = pd.DataFrame()
-
         df = self.queryCleanData(facility, measure, procedure)
         
         missing_dict = []
@@ -194,8 +187,8 @@ class DataManagement(FileManagement):
                     "Facility": facility,
                     "Procedure": procedure,
                     "Date": last_month + relativedelta(months=+i),
-                    "Num": 0,
-                    "Den": df["Denominator"].mean(),
+                    "Numerator": 0,
+                    "Denominator": df["Denominator"].mean(),
                     "Units": 0
                 }
                 missing_dict.append(row)
@@ -207,24 +200,65 @@ class DataManagement(FileManagement):
         for facility in self.facilities:
             for measure in self.measures:
                 if measure == "SSI":
-                    procedures = [False, "COLO","HYST"]
+                    procedures = ["NA", "COLO","HYST"]
                     for procedure in procedures:
                         x = self.findDates(facility,measure,procedure)
                         y = pd.concat([y,x],sort=True)
                         x = None
                 else:
-                    procedure = False
+                    procedure = "NA"
                     x = self.findDates(facility,measure,procedure)
                     y = pd.concat([y,x],sort=True)
                     x = None
-        self.missing_data = y
         self.exportToExcel(y,self.mainDirectory,self.missingDataFile)
         y = None
 
-class CalculateData(DataManagement):
+class CompareFiles(DataManagement):
+    def __init__(self,facilities,measures):
+        super().__init__(facilities,measures)
+        
+        self.getCompareCollate(self.currentDataFile,self.newDataFile,self.currentDataFile)
+        self.runDataManagement(self.currentDataFile)
+        self.findMissingData()
+        self.getCompareCollate(self.currentDataFile,self.missingDataFile,self.tableauDataFile)
+        self.runDataManagement(self.tableauDataFile)
+
+    def filterHACFile(self, hacData):
+        try:
+            hacData = hacData[["Date","Denominator","Facility","Measure","Numerator","Procedure","Units"]]
+        except:
+            print("Error filtering HAC File. ")
+
+        return hacData
+    
+    def compareFile(self,newDataframe,oldDataframe):
+        combinedDataframe = pd.concat([newDataframe,oldDataframe],sort=True,axis=0,ignore_index=True, join="outer").drop_duplicates(subset=["Date","Facility","Measure","Procedure"]).reset_index()
+        return combinedDataframe
+
+    def getCompareCollate(self,oldDF,newDF,destination):
+        newDF = self.filterHACFile(self.importFromExcel(self.mainDirectory,newDF))
+        oldDF = self.filterHACFile(self.importFromExcel(self.mainDirectory,oldDF))
+        print(newDF.describe())
+        print(oldDF.describe())
+        outDF = pd.DataFrame()
+
+        if (oldDF.empty) & (newDF.empty):
+            print("Missing both files (Original & New).")
+        elif oldDF.empty:
+            outDF = newDF
+            print("Original file does not exist.")
+        elif newDF.empty:
+            outDF = oldDF
+            print("New file does not exist.")
+        else:
+            outDF = self.compareFile(newDF,oldDF)
+        print(outDF.describe())
+        self.exportToExcel(outDF,self.mainDirectory,destination)
+        #self.moveFile(self.mainDirectory,self.newDataFile,self.currentMonthDirectory)
+
+class CalculateData(CompareFiles):
     def __init__(self,popStats,facilities,measures):
         super().__init__(facilities,measures)
-        self.runDataManagement()
         self.popStats = popStats
         self.targets = self.importFromExcel(self.mainDirectory,self.targetFile,"Targets")
         self.anthemPts = self.importFromExcel(self.mainDirectory,self.targetFile,"AnthemPoints")
@@ -304,7 +338,7 @@ class CalculateData(DataManagement):
         def getTarget(facility,measure,procedure):
             target = pd.DataFrame()
             if (measure != "SSI") or procedure:
-                if procedure:
+                if procedure != "NA":
                     target = self.targets[(self.targets["Facility"] == facility) & (self.targets["Measure"] == measure) & (self.targets["Procedure"] == procedure)]["VBP Target"]
                 else:
                     target = self.targets[(self.targets["Facility"] == facility) & (self.targets["Measure"] == measure)]["VBP Target"]
@@ -318,7 +352,7 @@ class CalculateData(DataManagement):
         def getAnthemPoints(measure,procedure):
             points = 0
 
-            if procedure:
+            if procedure != "NA":
                 points = self.anthemPts[(self.anthemPts["Measure"] == measure) & (self.anthemPts["Procedure"] == procedure)]["Points"].tolist()[0]
             else:
                 points = self.anthemPts[(self.anthemPts["Measure"] == measure)]["Points"].tolist()[0]
@@ -384,13 +418,13 @@ class CalculateData(DataManagement):
         for facility in self.facilities:
             for measure in self.measures:
                 if measure == "SSI":
-                    procedures = [False, "COLO","HYST"]
+                    procedures = ["NA", "COLO","HYST"]
                     for procedure in procedures:
                         x = self.queryThenCalculate(facility, measure, procedure,"CY")
                         y = pd.concat([y,x],sort=True)
                         x = None
                 else:
-                    procedure = False
+                    procedure = "NA"
                     x = self.queryThenCalculate(facility, measure, procedure,"CY")
                     y = pd.concat([y,x],sort=True)
                     x = None
@@ -429,8 +463,8 @@ class ExtractNewData(DataManagement):
 
         self.output_data = self.cleanData(self.output_data)
 
-        self.exportToExcel(self.output_data,self.mainDirectory,self.newDatafile)
-        #self.exportToPickle(self.output_data,self.mainDirectory,self.newDatafile)
+        self.exportToExcel(self.output_data,self.mainDirectory,self.newDataFile)
+        #self.exportToPickle(self.output_data,self.mainDirectory,self.newDataFile)
 
     # Extract Functions
     def extractCAUTI(self):
@@ -535,41 +569,6 @@ class ExtractNewData(DataManagement):
         self.output_data = pd.concat([self.output_data,output],sort=True)
         output = None
 
-class CompareFiles(FileManagement):
-    def __init__(self):
-        super().__init__()
-        self.getCompareCollate()
-
-    def filterHACFile(self, hacData):
-        try:
-            hacData = hacData[["Date","Denominator","Facility","Measure","Numerator","Procedure","Units"]]
-        except:
-            print("Error filtering HAC File. ")
-
-        return hacData
-    
-    def compareFile(self,newDataframe,oldDataframe):
-        combinedDataframe = pd.concat([newDataframe,oldDataframe],axis=0,ignore_index=True, join="outer").drop_duplicates(subset=["Date","Facility","Measure","Procedure"]).reset_index()
-        return combinedDataframe
-
-    def getCompareCollate(self):
-        newDF = self.filterHACFile(self.importFromExcel(self.mainDirectory,self.newDatafile))
-        oldDF = self.filterHACFile(self.importFromExcel(self.mainDirectory,self.currentDataFile))
-        outDF = pd.DataFrame()
-
-        if (oldDF.empty) & (newDF.empty):
-            print("Missing both files (Original & New).")
-        elif oldDF.empty:
-            outDF = newDF
-            print("Original file does not exist.")
-        elif newDF.empty:
-            outDF = oldDF
-            print("New file does not exist.")
-        else:
-            outDF = self.compareFile(newDF,oldDF)
-        
-        self.exportToExcel(outDF,self.mainDirectory,self.tableauDataFile)
-        #self.moveFile(self.mainDirectory,self.newDatafile,self.currentMonthDirectory)
 
 def main():
     def getAttributes():
@@ -636,7 +635,6 @@ def main():
     m,f,ps = getAttributes()
     
     extract = ExtractNewData(f,m)
-    compare = CompareFiles()
     hac = CalculateData(ps,f,m)
 
     return hac
