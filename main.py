@@ -30,9 +30,11 @@ class FileManagement:
         self.checkDirectory(self.newDataDirectory)
         self.checkDirectory(self.processedDataDirectory)
 
-        self.newDatafile = "newestNHSNData"
-        self.currentDataFile = "currentNHSNData"
-        self.missingDataFile = "missingNHSNData"
+        self.newDatafile = "newestNHSNData" # New data being read in
+        self.currentDataFile = "toDateNHSNData" # New data + previous set of data
+        self.missingDataFile = "missingNHSNData" # Expected but missing data
+        self.tableauDataFile = "tableauNHSNData" # toDate + Missing, run calculations
+
         self.targetFile = "targetData"
 
         self.currentMonthDirectory = self.createMonthDir()
@@ -121,9 +123,13 @@ class DataManagement(FileManagement):
         self.facilities = facilities
         self.measures = measures
 
-        self.raw_data = self.importFromExcel(self.mainDirectory,self.currentDataFile)
-        self.clean_data = self.cleanRawData(self.raw_data)
+
+    def runDataManagement(self):
+        self.raw_data = self.importFromExcel(self.mainDirectory,self.tableauDataFile)
+        self.clean_data = self.cleanData(self.raw_data)
+        print(self.clean_data.head(1))
         self.output_data = pd.DataFrame()
+        print(self.output_data.head(1))
         self.missing_data = pd.DataFrame()
         
         self.findMissingData()
@@ -142,27 +148,22 @@ class DataManagement(FileManagement):
 
         if facility == "All Ministries":
             temp = temp[(temp["Measure"] == measure) & (temp["Facility"] != "All Ministries")] # Want to aggregate large facilities, All Ministries raw data includes regional facilities
-            print(temp)
             temp = temp.groupby([temp.index.year,temp.index.month]).sum()
             temp.index = temp.index.set_names(["Y", "M"])
             temp.reset_index(inplace=True)
-
             temp["Date"] = pd.to_datetime({"year":temp.Y,"month":temp.M,"day":1}, format="%Y%m%d")
             temp["Measure"] = measure
             temp["Facility"] = "All Ministries"
             temp = temp.drop(["Y","M"],axis=1)
-            print("\n===========================\n")
-            print(temp)
         else:
             temp = temp[createMask(facility,measure,procedure)]
 
         temp = temp.set_index(temp["Date"],drop=False)
         return temp
 
-    def cleanRawData(self,df):
-        df["Facility"] = df["Facility"].replace(np.nan,"None")
-
-        df = df[df["Facility"] != "None"]
+    def cleanData(self,df):
+        df = df.copy()
+        df = df.loc[df["Facility"].isin(self.facilities)]
         
         df["Numerator"] = pd.to_numeric(df["Numerator"])
         df["Numerator"] = df["Numerator"].replace(np.nan,0.0)
@@ -172,8 +173,6 @@ class DataManagement(FileManagement):
         
         df["Units"] = pd.to_numeric(df["Units"])
         df["Units"] = df["Units"].replace(np.nan,0.0)
-
-        df["Date"] = df["Date"]
         
         df = df[["Facility","Date","Numerator","Denominator","Units", "Measure","Procedure"]]
         return df
@@ -225,6 +224,7 @@ class DataManagement(FileManagement):
 class CalculateData(DataManagement):
     def __init__(self,popStats,facilities,measures):
         super().__init__(facilities,measures)
+        self.runDataManagement()
         self.popStats = popStats
         self.targets = self.importFromExcel(self.mainDirectory,self.targetFile,"Targets")
         self.anthemPts = self.importFromExcel(self.mainDirectory,self.targetFile,"AnthemPoints")
@@ -246,12 +246,13 @@ class CalculateData(DataManagement):
             df["PPTD_DEN"] = -1.0
 
             if period == "CY":
-                df["PPTD_NUM"] = df.groupby(df["Date"].year)["Numerator"].cumsum()
-                df["PPTD_DEN"] = df.groupby(df["Date"].year)["Denominator"].cumsum()
+                df["PPTD_NUM"] = df.groupby(df["Date"].dt.year)["Numerator"].cumsum()
+                df["PPTD_DEN"] = df.groupby(df["Date"].dt.year)["Denominator"].cumsum()
+                df["CY"] = df["Date"]
             elif period == "FY":
-                df["FiscalYear"] = df["Date"] + pd.DateOffset(months=-6)
-                df["PPTD_NUM"] = df.groupby(df.FiscalYear.dt.year)["Numerator"].cumsum()
-                df["PPTD_DEN"] = df.groupby(df.FiscalYear.dt.year)["Denominator"].cumsum()
+                df["FY"] = df["Date"] + pd.DateOffset(months=-6)
+                df["PPTD_NUM"] = df.groupby(df["FY"].dt.year)["Numerator"].cumsum()
+                df["PPTD_DEN"] = df.groupby(df["FY"].dt.year)["Denominator"].cumsum()
                 #df = df.drop(["FiscalYear"],axis=1)
             elif period == "ROLL":
                 m = df.iloc[-1].Month.month # Error is occuring when Ministry == All Ministries
@@ -307,29 +308,44 @@ class CalculateData(DataManagement):
                     target = self.targets[(self.targets["Facility"] == facility) & (self.targets["Measure"] == measure) & (self.targets["Procedure"] == procedure)]["VBP Target"]
                 else:
                     target = self.targets[(self.targets["Facility"] == facility) & (self.targets["Measure"] == measure)]["VBP Target"]
-            return target
+            
+            if target.empty:
+                print("No target found.", facility, measure, procedure)
+                return 1
+            else:
+               return target.tolist()[0]
+
+        def getAnthemPoints(measure,procedure):
+            points = 0
+
+            if procedure:
+                points = self.anthemPts[(self.anthemPts["Measure"] == measure) & (self.anthemPts["Procedure"] == procedure)]["Points"].tolist()[0]
+            else:
+                points = self.anthemPts[(self.anthemPts["Measure"] == measure)]["Points"].tolist()[0]
+
+            return points
 
         def calcAchievementPoints(df,target):
-            if df["Denominator"].last("12M").sum() >= 1:
-                if not target.empty:
-                    df["CumAchievementPts"] = df["PPTD"].apply(lambda x: round(9*(x-target)/(-target)+0.5))
-                else:
-                    df["CumAchievementPts"] = np.nan
+            if (df["Denominator"].last("12M").sum() >= 1) & (target != -1):
+                df["CumAchievementPts"] = df["PPTD"].apply(lambda x: round(9*(x-target)/(-target)+0.5))
             else:
                 df["CumAchievementPts"] = np.nan
             return df
         
-        def calcResidual(df,target):
-            print(df)
+        def calcResidual(df,target,period):
             if df["Denominator"].last("12M").sum() >= 1:
-                if not target.empty:
-                    avgDen = df["Denominator"].mean()
-                    print(avgDen)
-                    df["ProjectedDen"] = df.apply(lambda row: round((target*(row["PPTD_DEN"] + avgDen*(12-int(row["Date"].month)))),0),axis=1)
-                    df["ResidualVBP"] = df.apply(lambda row: row["ProjectedDen"] - row["PPTD_NUM"],axis=1)
-                else:
-                    df["ResidualVBP"] = np.nan
-                    df["ProjectedDen"] = np.nan
+                avgDen = df["Denominator"].mean()
+
+                df["ProjectedDen"] = df.apply(lambda row: round((target*(row["PPTD_DEN"] + avgDen*(12-int(row[period].month)))),0),axis=1)
+                df["ResidualVBP"] = df.apply(lambda row: row["ProjectedDen"] - row["PPTD_NUM"],axis=1)
+            else:
+                df["ResidualVBP"] = np.nan
+                df["ProjectedDen"] = np.nan
+            return df
+
+        def calcAnthemPoints(df,target,points):
+            df["AnthemPoints"] = df.apply(lambda row: float(points) if float(row["PPTD"]) >= target else 0.0,axis=1)
+
             return df
 
         ## Clean Data ##
@@ -352,7 +368,8 @@ class CalculateData(DataManagement):
             filteredData = calc3MonthAVG(filteredData)
             filteredData = calcZScore(filteredData)
             filteredData = calcAchievementPoints(filteredData,getTarget(facility,measure,procedure))
-            filteredData = calcResidual(filteredData,getTarget(facility,measure,procedure))
+            filteredData = calcResidual(filteredData,getTarget(facility,measure,procedure),period)
+            filteredData = calcAnthemPoints(filteredData,getTarget(facility,measure,procedure),getAnthemPoints(measure,procedure))
         return filteredData
 
     def queryThenCalculate(self,facility,measure,procedure,period):
@@ -362,26 +379,27 @@ class CalculateData(DataManagement):
         return df
 
     def runCalculations(self):
+        print("Running Calculations.")
         y = pd.DataFrame()
         for facility in self.facilities:
             for measure in self.measures:
                 if measure == "SSI":
                     procedures = [False, "COLO","HYST"]
                     for procedure in procedures:
-                        x = self.queryThenCalculate(facility, measure, procedure,"FY")
+                        x = self.queryThenCalculate(facility, measure, procedure,"CY")
                         y = pd.concat([y,x],sort=True)
                         x = None
                 else:
                     procedure = False
-                    x = self.queryThenCalculate(facility, measure, procedure,"FY")
+                    x = self.queryThenCalculate(facility, measure, procedure,"CY")
                     y = pd.concat([y,x],sort=True)
                     x = None
         self.output_data = y
-        self.exportToExcel(self.output_data,self.mainDirectory,self.currentDataFile)
+        self.exportToExcel(self.output_data,self.mainDirectory,self.tableauDataFile)
 
 class ExtractNewData(DataManagement):
-    def __init__(self):
-        super().__init__()
+    def __init__(self,facilities,measures):
+        super().__init__(facilities,measures)
 
         self.locationCodes = {
             10159: "SV Indianapolis",
@@ -409,8 +427,10 @@ class ExtractNewData(DataManagement):
         self.extractMRSA()
         self.extractSSI()
 
+        self.output_data = self.cleanData(self.output_data)
+
         self.exportToExcel(self.output_data,self.mainDirectory,self.newDatafile)
-        self.exportToPickle(self.output_data,self.mainDirectory,self.newDatafile)
+        #self.exportToPickle(self.output_data,self.mainDirectory,self.newDatafile)
 
     # Extract Functions
     def extractCAUTI(self):
@@ -424,7 +444,7 @@ class ExtractNewData(DataManagement):
         output["Units"] = cautiDF["numucathdays"]
         output["Measure"] = "CAUTI"
         output["Facility"] = cautiDF["orgID"].apply(lambda x: self.locationCodes[int(x)] if pd.notna(x) else "All Ministries")
-        output = output.set_index("Date")
+        output = output.set_index("Date",drop=False)
 
         self.output_data = pd.concat([self.output_data,output])
         output = None
@@ -440,7 +460,7 @@ class ExtractNewData(DataManagement):
         output["Units"] = clabsiDF["numcldays"]
         output["Measure"] = "CLABSI"
         output["Facility"] = clabsiDF["orgID"].apply(lambda x: self.locationCodes[int(x)] if pd.notna(x) else "All Ministries")
-        output = output.set_index("Date")
+        output = output.set_index("Date",drop=False)
 
         self.output_data = pd.concat([self.output_data,output])
         output = None
@@ -466,7 +486,7 @@ class ExtractNewData(DataManagement):
         output["Denominator"] = (output["Units"] / output["numpatdays"]) * output["numPred"]
         
         output = output[["Date","Numerator","Denominator","Units","Measure","Facility"]]
-        output = output.set_index("Date")
+        output = output.set_index("Date",drop=False)
 
         self.output_data = pd.concat([self.output_data,output])
         output = None
@@ -493,7 +513,7 @@ class ExtractNewData(DataManagement):
         output["Denominator"] = (output["Units"] / output["numpatdays"]) * output["numPred"]
         
         output = output[["Date","Numerator","Denominator","Units","Measure","Facility"]]
-        output = output.set_index("Date")
+        output = output.set_index("Date",drop=False)
 
         self.output_data = pd.concat([self.output_data,output])
         output = None
@@ -510,7 +530,7 @@ class ExtractNewData(DataManagement):
         output["Measure"] = "SSI"
         output["Facility"] = ssiDF["orgid"].apply(lambda x: self.locationCodes[int(x)] if pd.notna(x) else "All Ministries")
         output["Procedure"] = ssiDF["proccode"]
-        output = output.set_index("Date")
+        output = output.set_index("Date",drop=False)
 
         self.output_data = pd.concat([self.output_data,output],sort=True)
         output = None
@@ -548,19 +568,18 @@ class CompareFiles(FileManagement):
         else:
             outDF = self.compareFile(newDF,oldDF)
         
-        self.exportToExcel(outDF,self.mainDirectory,self.currentDataFile)
-        self.exportToPickle(outDF,self.mainDirectory,self.currentDataFile)
-        self.moveFile(self.mainDirectory,self.newDatafile,self.currentMonthDirectory)
+        self.exportToExcel(outDF,self.mainDirectory,self.tableauDataFile)
+        #self.moveFile(self.mainDirectory,self.newDatafile,self.currentMonthDirectory)
 
 def main():
     def getAttributes():
         measures = [
-            #"CAUTI",
-            #"CLABSI",
+            "CAUTI",
+            "CLABSI",
             "CDIFF",
-            #"MRSA",
-            #"PSI_90: Composite",
-            #"SSI",
+            "MRSA",
+            "PSI_90: Composite",
+            "SSI",
         ]
 
         facilities = [
@@ -616,7 +635,7 @@ def main():
 
     m,f,ps = getAttributes()
     
-    extract = ExtractNewData()
+    extract = ExtractNewData(f,m)
     compare = CompareFiles()
     hac = CalculateData(ps,f,m)
 
