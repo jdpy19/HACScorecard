@@ -33,6 +33,7 @@ class FileManagement:
         self.newDatafile = "newestNHSNData"
         self.currentDataFile = "currentNHSNData"
         self.missingDataFile = "missingNHSNData"
+        self.targetFile = "targetData"
 
         self.currentMonthDirectory = self.createMonthDir()
 
@@ -83,12 +84,16 @@ class FileManagement:
             print("Success!")
 
     # Import functions
-    def importFromExcel(self,path,filename):
+    def importFromExcel(self,path,filename,sheet_name=None):
         dataframe = pd.DataFrame()
 
         try:
             print("Importing {} from Excel...".format(filename,path))
-            dataframe = pd.read_excel(join(path,filename + ".xlsx"))
+            if sheet_name == None:
+                dataframe = pd.read_excel(join(path,filename + ".xlsx"))
+            else:
+                print("Sheet name not None.")
+                dataframe = pd.read_excel(join(path,filename + ".xlsx"),sheet_name)
         except:
             print("Failure.")
         else: 
@@ -137,19 +142,21 @@ class DataManagement(FileManagement):
 
         if facility == "All Ministries":
             temp = temp[(temp["Measure"] == measure) & (temp["Facility"] != "All Ministries")] # Want to aggregate large facilities, All Ministries raw data includes regional facilities
+            print(temp)
             temp = temp.groupby([temp.index.year,temp.index.month]).sum()
             temp.index = temp.index.set_names(["Y", "M"])
             temp.reset_index(inplace=True)
 
             temp["Date"] = pd.to_datetime({"year":temp.Y,"month":temp.M,"day":1}, format="%Y%m%d")
-            
             temp["Measure"] = measure
             temp["Facility"] = "All Ministries"
-            temp = temp.set_index("Date",drop=False)
             temp = temp.drop(["Y","M"],axis=1)
+            print("\n===========================\n")
+            print(temp)
         else:
             temp = temp[createMask(facility,measure,procedure)]
 
+        temp = temp.set_index(temp["Date"],drop=False)
         return temp
 
     def cleanRawData(self,df):
@@ -180,7 +187,6 @@ class DataManagement(FileManagement):
         if not df.empty:
             today = dt.datetime.now()
             last_month = df["Date"].max()
-            print(measure, facility, procedure)
             n_missing = math.floor((today - last_month)/np.timedelta64(1,"M"))
 
             for i in range(1,n_missing):
@@ -220,38 +226,39 @@ class CalculateData(DataManagement):
     def __init__(self,popStats,facilities,measures):
         super().__init__(facilities,measures)
         self.popStats = popStats
+        self.targets = self.importFromExcel(self.mainDirectory,self.targetFile,"Targets")
+        self.anthemPts = self.importFromExcel(self.mainDirectory,self.targetFile,"AnthemPoints")
 
         self.runCalculations()
 
     # Calculations
-    def calcAttributes(self,filteredData,period,measure,procedure):
-        
+    def calcAttributes(self,filteredData,period,facility,measure,procedure):
         ## Helper functions ##
-        def calculateSIR(df):
+        def calcSIR(df):
             df["Score"] =  df["Numerator"] / df["Denominator"]
             df["Score"] = df["Score"].replace(np.inf,0)
         
             return df
 
-        def calculatePPTD(df, period):
+        def calcPPTD(df, period):
             # Calculate Performance Period To Date
             df["PPTD_NUM"] = 0.0
             df["PPTD_DEN"] = -1.0
 
             if period == "CY":
-                df["PPTD_NUM"] = df.groupby(df.index.year)["Numerator"].cumsum()
-                df["PPTD_DEN"] = df.groupby(df.index.year)["Denominator"].cumsum()
+                df["PPTD_NUM"] = df.groupby(df["Date"].year)["Numerator"].cumsum()
+                df["PPTD_DEN"] = df.groupby(df["Date"].year)["Denominator"].cumsum()
             elif period == "FY":
-                df["FiscalYear"] = df.index + pd.DateOffset(months=-6)
+                df["FiscalYear"] = df["Date"] + pd.DateOffset(months=-6)
                 df["PPTD_NUM"] = df.groupby(df.FiscalYear.dt.year)["Numerator"].cumsum()
                 df["PPTD_DEN"] = df.groupby(df.FiscalYear.dt.year)["Denominator"].cumsum()
-                df = df.drop(["FiscalYear"],axis=1)
+                #df = df.drop(["FiscalYear"],axis=1)
             elif period == "ROLL":
                 m = df.iloc[-1].Month.month # Error is occuring when Ministry == All Ministries
-                df["Roll"] = df.index + pd.DateOffset(months=-m)
+                df["Roll"] = df["Date"] + pd.DateOffset(months=-m)
                 df["PPTD_NUM"] = df.groupby(df.Roll.dt.year)["Numerator"].cumsum()
                 df["PPTD_DEN"] = df.groupby(df.Roll.dt.year)["Denominator"].cumsum()
-                df =df.drop(["Roll"],axis=1)
+                #df =df.drop(["Roll"],axis=1)
             else:
                 print("Performance Period type not recognized.")
 
@@ -259,13 +266,7 @@ class CalculateData(DataManagement):
 
             return df
 
-        def calculateResidual():
-            #avgDen = df["Denominator"].mean()
-                #df["ResidualVBP"] = round((df["VBP Target"]*(df["PPTD_DEN"] + avgDen*(12-df.FiscalYear.dt.month))) - df["PPTD_NUM"],0)
-                #df["ProjectedDen"] = round((df["VBP Target"]*(df["PPTD_DEN"] + avgDen*(12-df.FiscalYear.dt.month))),0)
-            pass
-
-        def calculate3MonthAVG(df):
+        def calc3MonthAVG(df):
             # Calculate 3 Month rolling average
             df["CUMSUM_NUM3"] = df["Numerator"].rolling(window=3,min_periods=1).sum()
             df["CUMSUM_DEN3"] = df["Denominator"].rolling(window=3,min_periods=1).sum()
@@ -278,8 +279,7 @@ class CalculateData(DataManagement):
             # Winsorized ZScore, 
             # Cumulative Winsorized ZScore, 
             # Percentile
-
-            if df["Denominator"].sum() >= 1:
+            if df["Denominator"].last("12M").sum() >= 1:
                 stats = self.popStats[measure]
                 minZScore = (stats["topFive"] - stats["mean"]) / stats["std"]
                 maxZScore = (stats["bottomFive"] - stats["mean"]) / stats["std"]
@@ -300,31 +300,65 @@ class CalculateData(DataManagement):
 
             return df
 
+        def getTarget(facility,measure,procedure):
+            target = pd.DataFrame()
+            if (measure != "SSI") or procedure:
+                if procedure:
+                    target = self.targets[(self.targets["Facility"] == facility) & (self.targets["Measure"] == measure) & (self.targets["Procedure"] == procedure)]["VBP Target"]
+                else:
+                    target = self.targets[(self.targets["Facility"] == facility) & (self.targets["Measure"] == measure)]["VBP Target"]
+            return target
+
+        def calcAchievementPoints(df,target):
+            if df["Denominator"].last("12M").sum() >= 1:
+                if not target.empty:
+                    df["CumAchievementPts"] = df["PPTD"].apply(lambda x: round(9*(x-target)/(-target)+0.5))
+                else:
+                    df["CumAchievementPts"] = np.nan
+            else:
+                df["CumAchievementPts"] = np.nan
+            return df
+        
+        def calcResidual(df,target):
+            print(df)
+            if df["Denominator"].last("12M").sum() >= 1:
+                if not target.empty:
+                    avgDen = df["Denominator"].mean()
+                    print(avgDen)
+                    df["ProjectedDen"] = df.apply(lambda row: round((target*(row["PPTD_DEN"] + avgDen*(12-int(row["Date"].month)))),0),axis=1)
+                    df["ResidualVBP"] = df.apply(lambda row: row["ProjectedDen"] - row["PPTD_NUM"],axis=1)
+                else:
+                    df["ResidualVBP"] = np.nan
+                    df["ProjectedDen"] = np.nan
+            return df
+
         ## Clean Data ##
-        filteredData = filteredData.groupby(filteredData["Date"],as_index=True).agg(
-            {
-                "Numerator":"sum",
-                "Denominator":"sum",
-                "Units":"sum",
-                "Facility":"first",
-                "Measure":"first",
-            }
-        )
-        filteredData["Procedure"] = procedure
+        if not filteredData.empty:
+            filteredData = filteredData.groupby(filteredData["Date"],as_index=False).agg(
+                {
+                    "Numerator":"sum",
+                    "Denominator":"sum",
+                    "Units":"sum",
+                    "Facility":"first",
+                    "Measure":"first",
+                }
+            )
+            filteredData["Procedure"] = procedure
+            filteredData = filteredData.set_index("Date",drop=False)
 
-        ## Run calculations ##
-        filteredData = calculateSIR(filteredData)
-        filteredData = calculatePPTD(filteredData,period)
-        filteredData = calculate3MonthAVG(filteredData)
-        filteredData = calcZScore(filteredData)
-        filteredData["Date"] = filteredData.index
-
+            ## Run Calculations ##
+            filteredData = calcSIR(filteredData)
+            filteredData = calcPPTD(filteredData,period)
+            filteredData = calc3MonthAVG(filteredData)
+            filteredData = calcZScore(filteredData)
+            filteredData = calcAchievementPoints(filteredData,getTarget(facility,measure,procedure))
+            filteredData = calcResidual(filteredData,getTarget(facility,measure,procedure))
         return filteredData
 
     def queryThenCalculate(self,facility,measure,procedure,period):
         df = pd.DataFrame()
         df = self.queryCleanData(facility, measure, procedure)
-        df = self.calcAttributes(df,period,measure,procedure)
+        df = self.calcAttributes(df,period,facility,measure,procedure)
         return df
 
     def runCalculations(self):
@@ -335,19 +369,17 @@ class CalculateData(DataManagement):
                     procedures = [False, "COLO","HYST"]
                     for procedure in procedures:
                         x = self.queryThenCalculate(facility, measure, procedure,"FY")
-
                         y = pd.concat([y,x],sort=True)
                         x = None
                 else:
                     procedure = False
                     x = self.queryThenCalculate(facility, measure, procedure,"FY")
-
                     y = pd.concat([y,x],sort=True)
                     x = None
         self.output_data = y
         self.exportToExcel(self.output_data,self.mainDirectory,self.currentDataFile)
 
-class ExtractNewData(FileManagement):
+class ExtractNewData(DataManagement):
     def __init__(self):
         super().__init__()
 
@@ -523,12 +555,12 @@ class CompareFiles(FileManagement):
 def main():
     def getAttributes():
         measures = [
-            "CAUTI",
-            "CLABSI",
+            #"CAUTI",
+            #"CLABSI",
             "CDIFF",
-            "MRSA",
-            "PSI_90: Composite",
-            "SSI",
+            #"MRSA",
+            #"PSI_90: Composite",
+            #"SSI",
         ]
 
         facilities = [
@@ -539,7 +571,6 @@ def main():
             "SV Fishers",
             "SV Heart Center",
             "SV Indianapolis",
-            "All Ministries",
             "SV Kokomo"
         ]
 
