@@ -60,7 +60,7 @@ class FileManagement:
     def moveFile(self,path,filename,dst):
         try:
             print("Trying to move {}...".format(filename))
-            shutil.move(join(path,filename+".xlsx"), dst)
+            shutil.move(join(path,filename+".xlsx"), join(dst,filename+".xlsx"))
         except:
             print("Failure.")
         else:
@@ -235,9 +235,9 @@ class CompareFiles(DataManagement):
         combinedDataframe = pd.concat([newDataframe,oldDataframe],sort=True,axis=0,ignore_index=True, join="outer").drop_duplicates(subset=["Date","Facility","Measure","Procedure"]).reset_index()
         return combinedDataframe
 
-    def getCompareCollate(self,oldDF,newDF,destination):
-        newDF = self.filterHACFile(self.importFromExcel(self.mainDirectory,newDF))
-        oldDF = self.filterHACFile(self.importFromExcel(self.mainDirectory,oldDF))
+    def getCompareCollate(self,oldFile,newFile,destination):
+        newDF = self.filterHACFile(self.importFromExcel(self.mainDirectory,newFile))
+        oldDF = self.filterHACFile(self.importFromExcel(self.mainDirectory,oldFile))
         outDF = pd.DataFrame()
 
         if (oldDF.empty) & (newDF.empty):
@@ -250,9 +250,9 @@ class CompareFiles(DataManagement):
             print("New file does not exist.")
         else:
             outDF = self.compareFile(newDF,oldDF)
-        print(outDF.describe())
+
         self.exportToExcel(outDF,self.mainDirectory,destination)
-        #self.moveFile(self.mainDirectory,self.newDataFile,self.currentMonthDirectory)
+        self.moveFile(self.mainDirectory,newFile,self.currentMonthDirectory)
 
 class CalculateData(CompareFiles):
     def __init__(self,popStats,facilities,measures):
@@ -456,11 +456,10 @@ class ExtractNewData(DataManagement):
         for measure in self.measures:
             self.extractHACData(measure)
 
-        self.output_data = self.cleanData(self.output_data)
-
-        self.exportToExcel(self.output_data,self.mainDirectory,self.newDataFile)
-        #self.exportToPickle(self.output_data,self.mainDirectory,self.newDataFile)
-
+        if not self.output_data.empty:
+            self.output_data = self.cleanData(self.output_data)
+            self.exportToExcel(self.output_data,self.mainDirectory,self.newDataFile)
+        
     # Extract Function
     def extractHACData(self, measure):
         # Helper Functions
@@ -515,37 +514,46 @@ class ExtractNewData(DataManagement):
 
         # Main 
         mDF = self.importFromExcel(self.newDataDirectory,filenames[0])
-        mDF = filterDF(mDF,measure)
+        if not mDF.empty:
+            mDF = filterDF(mDF,measure)
 
-        output = pd.DataFrame()
-        output["Date"] = pd.to_datetime(mDF["summaryYM"],format="%YM%m",errors="coerce")
-        output["Numerator"] = mDF[attributes["Numerator"]]
-        output["Units"] = mDF[attributes["Units"]]
-        output["Measure"] = measure
-        
-        # SSI uses orgid instead of orgID
-        if measure == "SSI":
-            output["Procedure"] = mDF["proccode"]
-            output["Facility"] = mDF["orgid"].apply(lambda x: self.locationCodes[int(x)] if pd.notna(x) else "All Ministries")
+            output = pd.DataFrame()
+            output["Date"] = pd.to_datetime(mDF["summaryYM"],format="%YM%m",errors="coerce")
+            output["Numerator"] = mDF[attributes["Numerator"]]
+            output["Units"] = mDF[attributes["Units"]]
+            output["Measure"] = measure
+            
+            # SSI uses orgid instead of orgID
+            if measure == "SSI":
+                output["Procedure"] = mDF["proccode"]
+                output["Facility"] = mDF["orgid"].apply(lambda x: self.locationCodes[int(x)] if pd.notna(x) else "All Ministries")
+            else: 
+                output["Procedure"] = "NA"
+                output["Facility"] = mDF["orgID"].apply(lambda x: self.locationCodes[int(x)] if pd.notna(x) else "All Ministries")
+
+            # IF quarterly 
+            if len(filenames) > 1:
+                qDF = self.importFromExcel(self.newDataDirectory,filenames[1])
+                if not qDF.empty:
+                    qDF = qDF[pd.notna(qDF["orgID"])]
+                    output["orgID"] = mDF["orgID"]
+                    output["summaryYQ"] = output.apply(lambda row: str(row["Date"].year) + "Q" + str(row["Date"].quarter),axis=1)
+                    output = pd.merge(output,qDF,how="left",left_on=["orgID","summaryYQ"],right_on=["orgID","summaryYQ"])
+                    output["Denominator"] = (output["Units"] / output[attributes["Units"]]) * output[attributes["Denominator"]]
+                else: 
+                    output["Denominator"] = np.nan
+            else:
+                output["Denominator"] = mDF[attributes["Denominator"]]
+
+            output = output[["Date","Numerator","Denominator","Units","Measure","Facility","Procedure"]]
+            output = output.set_index("Date",drop=False)
+            self.output_data = pd.concat([self.output_data,output])
+            output = None
+            
+            for f in filenames:
+                self.moveFile(self.newDataDirectory,f,self.currentMonthDirectory)
         else: 
-            output["Procedure"] = "NA"
-            output["Facility"] = mDF["orgID"].apply(lambda x: self.locationCodes[int(x)] if pd.notna(x) else "All Ministries")
-
-        # IF quarterly 
-        if len(filenames) > 1:
-            qDF = self.importFromExcel(self.newDataDirectory,filenames[1])
-            qDF = qDF[pd.notna(qDF["orgID"])]
-            output["orgID"] = mDF["orgID"]
-            output["summaryYQ"] = output.apply(lambda row: str(row["Date"].year) + "Q" + str(row["Date"].quarter),axis=1)
-            output = pd.merge(output,qDF,how="left",left_on=["orgID","summaryYQ"],right_on=["orgID","summaryYQ"])
-            output["Denominator"] = (output["Units"] / output[attributes["Units"]]) * output[attributes["Denominator"]]
-        else:
-            output["Denominator"] = mDF[attributes["Denominator"]]
-
-        output = output[["Date","Numerator","Denominator","Units","Measure","Facility","Procedure"]]
-        output = output.set_index("Date",drop=False)
-        self.output_data = pd.concat([self.output_data,output])
-        output = None
+            print("File for {} not found.".format(measure))
 
 def main():
     def getAttributes():
