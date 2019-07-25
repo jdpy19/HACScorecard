@@ -161,13 +161,13 @@ class DataManagement(FileManagement):
         
         df["Numerator"] = pd.to_numeric(df["Numerator"])
         df["Numerator"] = df["Numerator"].replace(np.nan,0.0)
-
-        df["Denominator"] = pd.to_numeric(df["Denominator"])
-        df["Denominator"] = df["Denominator"].replace(np.nan,0.0)
         
         df["Units"] = pd.to_numeric(df["Units"])
         df["Units"] = df["Units"].replace(np.nan,0.0)
-        
+
+        df["Denominator"] = pd.to_numeric(df["Denominator"])
+        df["Denominator"] = df["Denominator"].replace(np.nan,df["Denominator"].mean())
+
         df = df[["Facility","Date","Numerator","Denominator","Units", "Measure","Procedure"]]
         return df
 
@@ -238,8 +238,6 @@ class CompareFiles(DataManagement):
     def getCompareCollate(self,oldDF,newDF,destination):
         newDF = self.filterHACFile(self.importFromExcel(self.mainDirectory,newDF))
         oldDF = self.filterHACFile(self.importFromExcel(self.mainDirectory,oldDF))
-        print(newDF.describe())
-        print(oldDF.describe())
         outDF = pd.DataFrame()
 
         if (oldDF.empty) & (newDF.empty):
@@ -455,120 +453,99 @@ class ExtractNewData(DataManagement):
 
         self.output_data = pd.DataFrame()
 
-        self.extractCAUTI()
-        self.extractCDIFF()
-        self.extractCLABSI()
-        self.extractMRSA()
-        self.extractSSI()
+        for measure in self.measures:
+            self.extractHACData(measure)
 
         self.output_data = self.cleanData(self.output_data)
 
         self.exportToExcel(self.output_data,self.mainDirectory,self.newDataFile)
         #self.exportToPickle(self.output_data,self.mainDirectory,self.newDataFile)
 
-    # Extract Functions
-    def extractCAUTI(self):
-        cautiDF = self.importFromExcel(self.newDataDirectory,"monthDataCAUTI")
-        cautiDF = cautiDF[pd.isnull(cautiDF["locationType"] ) & pd.isnull(cautiDF["loccdc"])]
+    # Extract Function
+    def extractHACData(self, measure):
+        # Helper Functions
+        def createFileNames(measure):
+            mName = "monthData"
+            qName = "quarterData"
+            
+            if measure in ["CDIFF","MRSA"]:
+                return [mName + measure, qName + measure]
+            else:
+                return [mName + measure]
         
-        output = pd.DataFrame()
-        output["Date"] = pd.to_datetime(cautiDF["summaryYM"],format="%YM%m",errors="coerce")
-        output["Numerator"] = cautiDF["infCount"]
-        output["Denominator"] = cautiDF["numPred"]
-        output["Units"] = cautiDF["numucathdays"]
-        output["Measure"] = "CAUTI"
-        output["Facility"] = cautiDF["orgID"].apply(lambda x: self.locationCodes[int(x)] if pd.notna(x) else "All Ministries")
-        output = output.set_index("Date",drop=False)
+        def filterDF(df, measure):
+            if measure == "CAUTI":
+                return df[pd.isnull(df["locationType"] ) & pd.isnull(df["loccdc"])]
+            elif measure == "CLABSI":
+                return df[pd.isnull(df["locationType"] ) & pd.isnull(df["locCDC"])]
+            else:
+                return df
 
+        # Local Variables
+        filenames = createFileNames(measure)
+        measureAttributes = {
+            "CAUTI": {
+                "Numerator":"infCount",
+                "Denominator":"numPred",
+                "Units":"numucathdays"
+            },
+            "CLABSI": {
+                "Numerator":"infCount",
+                "Denominator":"numPred",
+                "Units":"numcldays"
+            },
+            "CDIFF": {
+                "Numerator":"CDIF_facIncHOCount",
+                "Denominator":"numPred",
+                "Units":"numpatdays"
+            },
+            "MRSA": {
+                "Numerator":"MRSA_bldIncCount",
+                "Denominator":"numPred",
+                "Units":"numpatdays"
+            },
+            "SSI": {
+                "Numerator":"infCountComplex30d",
+                "Denominator":"numPredComplex30d",
+                "Units":"procCount"
+            }
+        }
+
+        attributes = measureAttributes[measure]
+
+        # Main 
+        mDF = self.importFromExcel(self.newDataDirectory,filenames[0])
+        mDF = filterDF(mDF,measure)
+
+        output = pd.DataFrame()
+        output["Date"] = pd.to_datetime(mDF["summaryYM"],format="%YM%m",errors="coerce")
+        output["Numerator"] = mDF[attributes["Numerator"]]
+        output["Units"] = mDF[attributes["Units"]]
+        output["Measure"] = measure
+        
+        # SSI uses orgid instead of orgID
+        if measure == "SSI":
+            output["Procedure"] = mDF["proccode"]
+            output["Facility"] = mDF["orgid"].apply(lambda x: self.locationCodes[int(x)] if pd.notna(x) else "All Ministries")
+        else: 
+            output["Procedure"] = "NA"
+            output["Facility"] = mDF["orgID"].apply(lambda x: self.locationCodes[int(x)] if pd.notna(x) else "All Ministries")
+
+        # IF quarterly 
+        if len(filenames) > 1:
+            qDF = self.importFromExcel(self.newDataDirectory,filenames[1])
+            qDF = qDF[pd.notna(qDF["orgID"])]
+            output["orgID"] = mDF["orgID"]
+            output["summaryYQ"] = output.apply(lambda row: str(row["Date"].year) + "Q" + str(row["Date"].quarter),axis=1)
+            output = pd.merge(output,qDF,how="left",left_on=["orgID","summaryYQ"],right_on=["orgID","summaryYQ"])
+            output["Denominator"] = (output["Units"] / output[attributes["Units"]]) * output[attributes["Denominator"]]
+        else:
+            output["Denominator"] = mDF[attributes["Denominator"]]
+
+        output = output[["Date","Numerator","Denominator","Units","Measure","Facility","Procedure"]]
+        output = output.set_index("Date",drop=False)
         self.output_data = pd.concat([self.output_data,output])
         output = None
-
-    def extractCLABSI(self):
-        clabsiDF = self.importFromExcel(self.newDataDirectory,"monthDataCLABSI")
-        clabsiDF = clabsiDF[pd.isnull(clabsiDF["locationType"] ) & pd.isnull(clabsiDF["locCDC"])]
-        
-        output = pd.DataFrame()
-        output["Date"] = pd.to_datetime(clabsiDF["summaryYM"],format="%YM%m",errors="coerce")
-        output["Numerator"] = clabsiDF["infCount"]
-        output["Denominator"] = clabsiDF["numPred"]
-        output["Units"] = clabsiDF["numcldays"]
-        output["Measure"] = "CLABSI"
-        output["Facility"] = clabsiDF["orgID"].apply(lambda x: self.locationCodes[int(x)] if pd.notna(x) else "All Ministries")
-        output = output.set_index("Date",drop=False)
-
-        self.output_data = pd.concat([self.output_data,output])
-        output = None
-    
-    def extractCDIFF(self):
-        cdiffDF = self.importFromExcel(self.newDataDirectory,"monthDataCDIFF")
-        #cdiffDF = cdiffDF[pd.notna(cdiffDF["orgID"])]
-        
-        cdiffQuarterDF = self.importFromExcel(self.newDataDirectory,"quarterDataCDIFF")
-        cdiffQuarterDF = cdiffQuarterDF[pd.notna(cdiffQuarterDF["orgID"])]
-
-        output = pd.DataFrame()
-        output["Date"] = pd.to_datetime(cdiffDF["summaryYM"],format="%YM%m",errors="coerce")
-        output["summaryYQ"] = output.apply(lambda row: str(row["Date"].year) + "Q" + str(row["Date"].quarter),axis=1)
-        output["Numerator"] = cdiffDF["CDIF_facIncHOCount"]
-        output["orgID"] = cdiffDF["orgID"]
-        output["Units"] = cdiffDF["numpatdays"]
-        output["Measure"] = "CDIFF"
-        output["Facility"] = cdiffDF["orgID"].apply(lambda x: self.locationCodes[int(x)] if pd.notna(x) else "All Ministries")
-
-        output = pd.merge(output,cdiffQuarterDF,how="left",left_on=["orgID","summaryYQ"],right_on=["orgID","summaryYQ"])
-
-        output["Denominator"] = (output["Units"] / output["numpatdays"]) * output["numPred"]
-        
-        output = output[["Date","Numerator","Denominator","Units","Measure","Facility"]]
-        output = output.set_index("Date",drop=False)
-
-        self.output_data = pd.concat([self.output_data,output])
-        output = None
-
-    def extractMRSA(self):
-        mrsaDF = self.importFromExcel(self.newDataDirectory,"monthDataMRSA")
-        #mrsaDF = mrsaDF[pd.notna(mrsaDF["orgID"])]
-        
-        mrsaQuarterDF = self.importFromExcel(self.newDataDirectory,"quarterDataMRSA")
-        mrsaQuarterDF = mrsaQuarterDF[pd.notna(mrsaQuarterDF["orgID"])]
-
-      
-        output = pd.DataFrame()
-        output["Date"] = pd.to_datetime(mrsaDF["summaryYM"],format="%YM%m",errors="coerce")
-        output["summaryYQ"] = output.apply(lambda row: str(row["Date"].year) + "Q" + str(row["Date"].quarter),axis=1)
-        output["Numerator"] = mrsaDF["MRSA_bldIncCount"]
-        output["orgID"] = mrsaDF["orgID"]
-        output["Units"] = mrsaDF["numpatdays"]
-        output["Measure"] = "MRSA"
-        output["Facility"] = mrsaDF["orgID"].apply(lambda x: self.locationCodes[int(x)] if pd.notna(x) else "All Ministries")
-
-        output = pd.merge(output,mrsaQuarterDF,how="left",left_on=["orgID","summaryYQ"],right_on=["orgID","summaryYQ"])
-
-        output["Denominator"] = (output["Units"] / output["numpatdays"]) * output["numPred"]
-        
-        output = output[["Date","Numerator","Denominator","Units","Measure","Facility"]]
-        output = output.set_index("Date",drop=False)
-
-        self.output_data = pd.concat([self.output_data,output])
-        output = None
-    
-    def extractSSI(self):
-        ssiDF = self.importFromExcel(self.newDataDirectory, "monthDataSSI")
-        #ssiDF = ssiDF[pd.notna(ssiDF["orgid"])]
-        
-        output = pd.DataFrame()
-        output["Date"] = pd.to_datetime(ssiDF["summaryYM"],format="%YM%m",errors="coerce")
-        output["Numerator"] = ssiDF["infCountComplex30d"]
-        output["Denominator"] = ssiDF["numPredComplex30d"]
-        output["Units"] = ssiDF["procCount"]
-        output["Measure"] = "SSI"
-        output["Facility"] = ssiDF["orgid"].apply(lambda x: self.locationCodes[int(x)] if pd.notna(x) else "All Ministries")
-        output["Procedure"] = ssiDF["proccode"]
-        output = output.set_index("Date",drop=False)
-
-        self.output_data = pd.concat([self.output_data,output],sort=True)
-        output = None
-
 
 def main():
     def getAttributes():
@@ -577,7 +554,7 @@ def main():
             "CLABSI",
             "CDIFF",
             "MRSA",
-            "PSI_90: Composite",
+            #"PSI_90: Composite",
             "SSI",
         ]
 
