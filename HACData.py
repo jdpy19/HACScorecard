@@ -11,8 +11,9 @@ import pandas as pd
 import numpy as np
 import pickle
 import scipy.stats as st
-import os
+from os import getcwd
 from os.path import join
+import re
 import sys
 import math
 import shutil
@@ -21,9 +22,9 @@ from dateutil.relativedelta import *
 
 class FileManagement:
     def __init__(self):
-        self.path = os.getcwd()
+        self.path = getcwd()
         self.mainDirectory = join(self.path,"HACScorecardData")
-        self.newDataDirectory = join(self.mainDirectory, "dataFromNHSN")
+        self.newDataDirectory = join(self.mainDirectory, "newRawData")
         self.processedDataDirectory = join(self.mainDirectory,"processedData")
     
         self.checkDirectory(self.mainDirectory)
@@ -399,9 +400,10 @@ class CalculateData(CompareFiles):
             filteredData = calcPPTD(filteredData,period)
             filteredData = calc3MonthAVG(filteredData)
             filteredData = calcZScore(filteredData)
-            filteredData = calcAchievementPoints(filteredData,getTarget(facility,measure,procedure))
-            filteredData = calcResidual(filteredData,getTarget(facility,measure,procedure),period)
-            filteredData = calcAnthemPoints(filteredData,getTarget(facility,measure,procedure),getAnthemPoints(measure,procedure))
+            if measure != "PSI_90: Composite":
+                filteredData = calcAchievementPoints(filteredData,getTarget(facility,measure,procedure))
+                filteredData = calcResidual(filteredData,getTarget(facility,measure,procedure),period)
+                filteredData = calcAnthemPoints(filteredData,getTarget(facility,measure,procedure),getAnthemPoints(measure,procedure))
         return filteredData
 
     def queryThenCalculate(self,facility,measure,procedure,period):
@@ -451,21 +453,70 @@ class ExtractNewData(DataManagement):
             28428: "SV Mercy"
         }
 
+        self.psiLocationCodes = {
+            "ASC69 St. Vincent Anderson Reg Hospital":"SV Anderson",
+            "ASC85 St. Vincent Heart Center":"SV Heart Center",
+            "ASC20 St. Vincent Fishers":"SV Fishers",
+            "ASC09 St. Vincent Evansville":"SV Evansville",
+            "ASC11 St. Vincent Indianapolis Hosp":"SV Indianapolis",
+            "ASC07 St. Vincent Carmel Hospital":"SV Carmel",
+            "ASC12 St. Joseph Hosp & Health Ctr":"SV Kokomo",
+        }
+
         self.output_data = pd.DataFrame()
 
         for measure in self.measures:
-            self.extractHACData(measure)
+            if measure != "PSI_90: Composite":
+                self.extractNHSNData(measure)
+            else:
+                self.extractPSIData()
 
         if not self.output_data.empty:
             self.output_data = self.cleanData(self.output_data)
             self.exportToExcel(self.output_data,self.mainDirectory,self.newDataFile)
         
-    # Extract Function
-    def extractHACData(self, measure):
+    # Extract Functions
+    def extractPSIData(self):
+        filenames = ["starpPSI","vbpPSI"]
+
+        for f in filenames:
+            def findDate(prompt):
+                results = re.findall("\d+/\d+/\d+", prompt)
+                date = dt.datetime.strptime(results[1],"%m/%d/%Y").date()
+                date = dt.datetime(date.year,date.month+1,1)
+                return date
+
+            output = pd.DataFrame()
+            df = self.importFromExcel(self.newDataDirectory,f)
+            if not df.empty:
+                prompt_details = str(df.iloc[4,0])
+
+                data = df.iloc[7:14,0:2]
+                data.columns=["Facility","Numerator"]
+
+                output["Facility"] = data["Facility"].apply(lambda x: self.psiLocationCodes[x])
+                output["Date"] = findDate(prompt_details)
+                output["Numerator"] = data["Numerator"]
+                output["Denominator"] = 1
+                output["Measure"] = "PSI_90: Composite"
+                output["Procedure"] = "NA"
+                output["Units"] = 1
+
+                output = output[["Date","Numerator","Denominator","Units","Measure","Facility","Procedure"]]
+                print(output)
+                output = output.set_index("Date",drop=False)
+                self.output_data = pd.concat([self.output_data,output])
+                output = None
+                
+                self.moveFile(self.newDataDirectory,f,self.currentMonthDirectory)
+
+
+
+    def extractNHSNData(self, measure):
         # Helper Functions
         def createFileNames(measure):
-            mName = "monthData"
-            qName = "quarterData"
+            mName = "monthNHSN"
+            qName = "quarterNHSN"
             
             if measure in ["CDIFF","MRSA"]:
                 return [mName + measure, qName + measure]
@@ -562,7 +613,7 @@ def main():
             "CLABSI",
             "CDIFF",
             "MRSA",
-            #"PSI_90: Composite",
+            "PSI_90: Composite",
             "SSI",
         ]
 
@@ -622,8 +673,8 @@ def main():
     extract = ExtractNewData(f,m)
     hac = CalculateData(ps,f,m)
 
-    return hac
-
 if __name__ == "__main__":
     hac= main()
 #%%
+
+
