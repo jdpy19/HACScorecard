@@ -12,6 +12,7 @@ scipy = "*"
 datetime = "*"
 flask = "*"
 python-dotenv = "*"
+statsmodels = "*"
 
 [requires]
 python_version = "3.7"

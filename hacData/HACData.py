@@ -28,7 +28,7 @@ from dateutil.relativedelta import *
 class FileManagement:
     def __init__(self):
         self.path = getcwd()
-        self.mainDirectory = join(self.path,"HACScorecardData")
+        self.mainDirectory = join(self.path,"hacData\\HACScorecardData")
         self.newDataDirectory = join(self.mainDirectory, "newRawData")
         self.processedDataDirectory = join(self.mainDirectory,"processedData")
     
@@ -138,10 +138,12 @@ class DataManagement(FileManagement):
         temp = self.clean_data.copy()
         temp["Date"] = pd.to_datetime(temp["Date"], errors="coerce")
         temp = temp.set_index(temp["Date"]).sort_index(ascending=True)
+
         def createMask(facility, measure, procedure):
             if procedure != "NA":
                 mask = (temp["Facility"] == facility) & (temp["Measure"] == measure) & (temp["Procedure"] == procedure)
             else:
+                print(procedure, "=='NA'")
                 mask = (temp["Facility"] == facility) & (temp["Measure"] == measure)
 
             return mask

@@ -16,10 +16,10 @@
       <connection class='federated'>
         <named-connections>
           <named-connection caption='currentNHSNData' name='excel-direct.0f1qykd0zyvk7p1d8jfgz1awl5v5'>
-            <connection class='excel-direct' cleaning='no' compat='no' dataRefreshTime='' filename='C:/Users/JDits001/Documents/Projects/HACScorecard/HACScorecardData/tableauNHSNData.xlsx' interpretationMode='0' password='' server='' validate='no' />
+            <connection class='excel-direct' cleaning='no' compat='no' dataRefreshTime='' filename='C:/Users/JDits001/Documents/Projects/HACScorecard/hacData/HACScorecardData/tableauNHSNData.xlsx' interpretationMode='0' password='' server='' validate='no' />
           </named-connection>
           <named-connection caption='targetData' name='excel-direct.1azuvad1azgjxo18ei3051yxqnfb'>
-            <connection class='excel-direct' cleaning='no' compat='no' dataRefreshTime='' filename='C:/Users/JDits001/Documents/Projects/HACScorecard/HACScorecardData/targetData.xlsx' interpretationMode='0' password='' server='' validate='no' />
+            <connection class='excel-direct' cleaning='no' compat='no' dataRefreshTime='' filename='C:/Users/JDits001/Documents/Projects/HACScorecard/hacData/HACScorecardData/targetData.xlsx' interpretationMode='0' password='' server='' validate='no' />
           </named-connection>
         </named-connections>
         <relation join='left' type='join'>
@@ -488,7 +488,7 @@
             <aggregation>Count</aggregation>
             <contains-null>true</contains-null>
             <attributes>
-              <attribute datatype='integer' name='context'>4</attribute>
+              <attribute datatype='integer' name='context'>1</attribute>
               <attribute datatype='string' name='gridOrigin'>&quot;A1:Y1281:no:A1:Y1281:0&quot;</attribute>
               <attribute datatype='boolean' name='header'>true</attribute>
               <attribute datatype='integer' name='outcome'>6</attribute>
@@ -666,7 +666,7 @@
       <column-instance column='[VBP Target]' derivation='Sum' name='[sum:VBP Target:qk]' pivot='key' type='quantitative' />
       <column-instance column='[winZScore]' derivation='Sum' name='[sum:winZScore:qk]' pivot='key' type='quantitative' />
       <column-instance column='[Calculation_2032249347337826305]' derivation='User' name='[usr:Calculation_2032249347337826305:ok]' pivot='key' type='ordinal' />
-      <layout dim-ordering='alphabetic' dim-percentage='0.395683' measure-ordering='alphabetic' measure-percentage='0.604317' show-structure='true' user-set-layout='true' />
+      <layout dim-ordering='alphabetic' dim-percentage='0.394191' measure-ordering='alphabetic' measure-percentage='0.605809' show-structure='true' user-set-layout='true' />
       <style>
         <style-rule element='mark'>
           <encoding attr='color' field='[sum:AnthemPoints:ok]' type='palette'>
@@ -681,6 +681,28 @@
             </map>
             <map to='#f28e2b'>
               <bucket>3.0</bucket>
+            </map>
+          </encoding>
+          <encoding attr='color' field='[usr:Calculation_2032249347337826305:ok]' type='palette'>
+            <map to='#59a14f'>
+              <bucket>1</bucket>
+            </map>
+          </encoding>
+          <encoding attr='color' field='[none:Calculation_1196550139353632772:nk]' type='palette'>
+            <map to='#4e79a7'>
+              <bucket>&quot;Top 50\%&quot;</bucket>
+            </map>
+            <map to='#59a14f'>
+              <bucket>&quot;Top 5\%&quot;</bucket>
+            </map>
+            <map to='#bab0ac'>
+              <bucket>&quot;NA&quot;</bucket>
+            </map>
+            <map to='#e15759'>
+              <bucket>&quot;Bottom 50\%&quot;</bucket>
+            </map>
+            <map to='#f28e2b'>
+              <bucket>&quot;Bottom 5\%&quot;</bucket>
             </map>
           </encoding>
           <encoding attr='color' field='[:Measure Names]' type='palette'>
@@ -706,28 +728,6 @@
             </map>
             <map to='#f28e2b'>
               <bucket>false</bucket>
-            </map>
-          </encoding>
-          <encoding attr='color' field='[none:Calculation_1196550139353632772:nk]' type='palette'>
-            <map to='#4e79a7'>
-              <bucket>&quot;Top 50\%&quot;</bucket>
-            </map>
-            <map to='#59a14f'>
-              <bucket>&quot;Top 5\%&quot;</bucket>
-            </map>
-            <map to='#bab0ac'>
-              <bucket>&quot;NA&quot;</bucket>
-            </map>
-            <map to='#e15759'>
-              <bucket>&quot;Bottom 50\%&quot;</bucket>
-            </map>
-            <map to='#f28e2b'>
-              <bucket>&quot;Bottom 5\%&quot;</bucket>
-            </map>
-          </encoding>
-          <encoding attr='color' field='[usr:Calculation_2032249347337826305:ok]' type='palette'>
-            <map to='#59a14f'>
-              <bucket>1</bucket>
             </map>
           </encoding>
         </style-rule>
@@ -1722,7 +1722,7 @@
               </zone>
               <zone h='91500' id='5' param='horz' type='layout-flow' w='98400' x='800' y='7500'>
                 <zone h='91500' id='3' type='layout-basic' w='98400' x='800' y='7500'>
-                  <zone h='31499' id='1' name='Overview' show-title='false' w='78600' x='800' y='7500'>
+                  <zone h='31498' id='1' name='Overview' show-title='false' w='78600' x='800' y='7500'>
                     <zone-style>
                       <format attr='border-color' value='#000000' />
                       <format attr='border-style' value='none' />
@@ -1730,7 +1730,7 @@
                       <format attr='margin' value='4' />
                     </zone-style>
                   </zone>
-                  <zone fixed-size='143' h='39999' id='7' is-fixed='true' name='CountOnTarget' show-title='false' w='19800' x='79400' y='7500'>
+                  <zone fixed-size='143' h='39998' id='7' is-fixed='true' name='CountOnTarget' show-title='false' w='19800' x='79400' y='7500'>
                     <layout-cache fixed-size-w='178' type-h='fixed' type-w='fixed' />
                     <zone-style>
                       <format attr='border-color' value='#000000' />
@@ -1739,7 +1739,7 @@
                       <format attr='margin' value='4' />
                     </zone-style>
                   </zone>
-                  <zone h='8500' id='6' leg-item-layout='horz' name='Overview' pane-specification-id='0' param='[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Calculation_1196550139353632772:nk]' type='color' w='78600' x='800' y='38999'>
+                  <zone h='8500' id='6' leg-item-layout='horz' name='Overview' pane-specification-id='0' param='[federated.0psocvp0oxlaz017zj0cs141e5fj].[none:Calculation_1196550139353632772:nk]' type='color' w='78600' x='800' y='38998'>
                     <zone-style>
                       <format attr='border-color' value='#000000' />
                       <format attr='border-style' value='none' />
@@ -1747,7 +1747,7 @@
                       <format attr='margin' value='4' />
                     </zone-style>
                   </zone>
-                  <zone h='51501' id='16' name='ZScoreByTime' show-title='false' w='98400' x='800' y='47499'>
+                  <zone h='51502' id='16' name='ZScoreByTime' show-title='false' w='98400' x='800' y='47498'>
                     <zone-style>
                       <format attr='border-color' value='#000000' />
                       <format attr='border-style' value='none' />
