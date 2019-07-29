@@ -6,19 +6,24 @@
 ###
 
 #%%
-# External Dependencies
+## External Dependencies ##
 import pandas as pd
 import numpy as np
 import pickle
 import scipy.stats as st
+from os import makedirs
 from os import getcwd
 from os.path import join
 import re
 import sys
 import math
 import shutil
-import datetime as dt
+import datetime as dtm
 from dateutil.relativedelta import *
+
+## Internal Dependencies ##
+
+## Body ##
 
 class FileManagement:
     def __init__(self):
@@ -45,7 +50,7 @@ class FileManagement:
     # Directory management functions
     def checkDirectory(self,directory):
         try:
-            os.makedirs(directory)
+            makedirs(directory)
         except FileExistsError:
             print("Directory already exists, did not create new folder.")
 
@@ -253,7 +258,7 @@ class CompareFiles(DataManagement):
             outDF = self.compareFile(newDF,oldDF)
 
         self.exportToExcel(outDF,self.mainDirectory,destination)
-        self.moveFile(self.mainDirectory,newFile,self.currentMonthDirectory)
+        #self.moveFile(self.mainDirectory,newFile,self.currentMonthDirectory)
 
 class CalculateData(CompareFiles):
     def __init__(self,popStats,facilities,measures):
@@ -606,6 +611,7 @@ class ExtractNewData(DataManagement):
         else: 
             print("File for {} not found.".format(measure))
 
+## Main ##
 def main():
     def getAttributes():
         measures = [

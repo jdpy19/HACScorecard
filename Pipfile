@@ -8,10 +8,8 @@ verify_ssl = true
 [packages]
 pandas = "*"
 numpy = "*"
-pickle = "*"
 scipy = "*"
 datetime = "*"
-sys = "*"
 flask = "*"
 python-dotenv = "*"
 

@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>{{ title }}</h1>
+{% for table in tables %}
+    {{ titles }}
+    {{ table|safe }}
+{% endfor %}
+{% endblock %}
