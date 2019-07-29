@@ -18,7 +18,7 @@ import re
 import sys
 import math
 import shutil
-import datetime as dtm
+import datetime as dt
 from dateutil.relativedelta import *
 
 ## Internal Dependencies ##
