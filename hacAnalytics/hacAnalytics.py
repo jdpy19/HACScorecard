@@ -2,7 +2,10 @@
 ## External Dependencies ##
 import math
 from statsmodels.tsa.holtwinters import ExponentialSmoothing
+from statsmodels.graphics.tsaplots import plot_acf
+from statsmodels.graphics.tsaplots import plot_pacf
 import numpy as np
+import matplotlib.pyplot as plt
 
 ## Internal Dependencies ##
 from hacData.HACData import DataManagement
@@ -31,10 +34,13 @@ class Analytics(DataManagement):
         self.plot_timeseries(data,["Numerator","Denominator"])
 
 
-        train_df,test_df = self.split_test_train(data,0.5)
+        train_df,test_df = self.split_test_train(data,1)
         self.exponential_smoothing(train_df,test_df,"Numerator",3)
         self.exponential_smoothing(train_df,test_df,"Denominator",3)
-        
+
+        self.seasonal_arima(train_df,test_df,"Numerator",12)
+    
+    # Exponential smoothing
     def exponential_smoothing(self,train_df,test_df,column,season_len):
         model = ExponentialSmoothing(train_df[column].to_numpy(), trend="add", seasonal="add", seasonal_periods=season_len)
         fit = model.fit()
@@ -45,8 +51,8 @@ class Analytics(DataManagement):
         metrics = {
             "MFE":np.mean(error),
             "MAE":np.mean(abs(error)),
-            "MSE":np.mean(error),
-            "RMSE":np.sqrt(np.mean(error))
+            "MSE":np.mean(np.square(error)),
+            "RMSE":np.sqrt(np.mean(np.square(error)))
         }
 
         print("""
@@ -77,6 +83,20 @@ class Analytics(DataManagement):
 
     def plot_timeseries(self, data,columns):
         data.plot(figsize=(12,3),y=columns,x="Date")
+
+    # ARIMA #
+    def seasonal_arima(self,train_df,test_df,column,season_len):
+        # Body
+        self.plot_acf_pacf(train_df[column])
+
+        
+
+    def plot_acf_pacf(self, data):
+        fig = plt.figure(figsize=(12,8))
+        ax1 = fig.add_subplot(211)
+        ax2 = fig.add_subplot(212)
+        fig = plot_acf(data,lags=12,ax=ax1)
+        fig = plot_pacf(data,lags=12,ax=ax2)
 
 
 ## Main ##
