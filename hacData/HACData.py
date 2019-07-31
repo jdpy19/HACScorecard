@@ -143,7 +143,6 @@ class DataManagement(FileManagement):
             if procedure != "NA":
                 mask = (temp["Facility"] == facility) & (temp["Measure"] == measure) & (temp["Procedure"] == procedure)
             else:
-                print(procedure, "=='NA'")
                 mask = (temp["Facility"] == facility) & (temp["Measure"] == measure)
 
             return mask
@@ -185,10 +184,10 @@ class DataManagement(FileManagement):
         
         missing_dict = []
         if not df.empty:
-            today = dt.datetime.now()
+            current_month = dt.datetime.today().month
             last_month = df["Date"].max()
-            n_missing = math.floor((today - last_month)/np.timedelta64(1,"M"))
-
+            n_missing = current_month - last_month.month
+            print("Last month: ",last_month, "Today: ",current_month,"NMissing: ",n_missing)
             for i in range(1,n_missing):
                 row = {
                     "Measure": measure,
@@ -376,8 +375,8 @@ class CalculateData(CompareFiles):
             if df["Denominator"].last("12M").sum() >= 1:
                 avgDen = df["Denominator"].mean()
 
-                df["ProjectedDen"] = df.apply(lambda row: round((target*(row["PPTD_DEN"] + avgDen*(12-int(row[period].month)))),0),axis=1)
-                df["ResidualVBP"] = df.apply(lambda row: row["ProjectedDen"] - row["PPTD_NUM"],axis=1)
+                df["ProjectedDen"] = df.apply(lambda row: (row["PPTD_DEN"] + avgDen*(12-int(row[period].month))),axis=1)
+                df["ResidualVBP"] = df.apply(lambda row: math.floor(target*row["ProjectedDen"]) - row["PPTD_NUM"],axis=1)
             else:
                 df["ResidualVBP"] = np.nan
                 df["ProjectedDen"] = np.nan
