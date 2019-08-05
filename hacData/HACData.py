@@ -410,6 +410,7 @@ class CalculateData(CompareFiles):
                 filteredData = calcAchievementPoints(filteredData,getTarget(facility,measure,procedure))
                 filteredData = calcResidual(filteredData,getTarget(facility,measure,procedure),period)
                 filteredData = calcAnthemPoints(filteredData,getTarget(facility,measure,procedure),getAnthemPoints(measure,procedure))
+          
         return filteredData
 
     def queryThenCalculate(self,facility,measure,procedure,period):
@@ -516,8 +517,6 @@ class ExtractNewData(DataManagement):
                 
                 self.moveFile(self.newDataDirectory,f,self.currentMonthDirectory)
 
-
-
     def extractNHSNData(self, measure):
         # Helper Functions
         def createFileNames(measure):
@@ -611,7 +610,7 @@ class ExtractNewData(DataManagement):
                 self.moveFile(self.newDataDirectory,f,self.currentMonthDirectory)
         else: 
             print("File for {} not found.".format(measure))
-
+ 
 ## Main ##
 def main():
     def getAttributes():
