@@ -27,6 +27,7 @@ from dateutil.relativedelta import *
 
 class FileManagement:
     def __init__(self):
+        super().__init__()
         self.path = getcwd()
         self.mainDirectory = join(self.path,"hacData\\HACScorecardData")
         self.newDataDirectory = join(self.mainDirectory, "newRawData")
@@ -44,8 +45,6 @@ class FileManagement:
         self.targetFile = "targetData"
 
         self.currentMonthDirectory = self.createMonthDir()
-
-        return super().__init__()
     
     # Directory management functions
     def checkDirectory(self,directory):
@@ -187,7 +186,7 @@ class DataManagement(FileManagement):
             current_month = dt.datetime.today().month
             last_month = df["Date"].max()
             n_missing = current_month - last_month.month
-            print("Last month: ",last_month, "Today: ",current_month,"NMissing: ",n_missing)
+            
             for i in range(1,n_missing):
                 row = {
                     "Measure": measure,
@@ -510,7 +509,6 @@ class ExtractNewData(DataManagement):
                 output["Units"] = 1
 
                 output = output[["Date","Numerator","Denominator","Units","Measure","Facility","Procedure"]]
-                print(output)
                 output = output.set_index("Date",drop=False)
                 self.output_data = pd.concat([self.output_data,output])
                 output = None
