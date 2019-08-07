@@ -47,7 +47,8 @@ class FileManagement:
         self.currentMonthDirectory = self.createMonthDir()
     
     # Directory management functions
-    def checkDirectory(self,directory):
+    @staticmethod
+    def checkDirectory(directory):
         try:
             makedirs(directory)
         except FileExistsError:
@@ -186,7 +187,7 @@ class DataManagement(FileManagement):
             current_month = dt.datetime.today().month
             last_month = df["Date"].max()
             n_missing = current_month - last_month.month
-            
+
             for i in range(1,n_missing):
                 row = {
                     "Measure": measure,
@@ -229,13 +230,13 @@ class CompareFiles(DataManagement):
         self.getCompareCollate(self.currentDataFile,self.missingDataFile,self.tableauDataFile)
         self.runDataManagement(self.tableauDataFile)
 
-    def filterHACFile(self, hacData):
+    def filterHACFile(self, df):
         try:
-            hacData = hacData[["Date","Denominator","Facility","Measure","Numerator","Procedure","Units"]]
+            df = df[["Date","Denominator","Facility","Measure","Numerator","Procedure","Units"]]
         except:
             print("Error filtering HAC File. ")
 
-        return hacData
+        return df
     
     def compareFile(self,newDataframe,oldDataframe):
         combinedDataframe = pd.concat([newDataframe,oldDataframe],sort=True,axis=0,ignore_index=True, join="outer").drop_duplicates(subset=["Date","Facility","Measure","Procedure"]).reset_index()
@@ -437,7 +438,29 @@ class CalculateData(CompareFiles):
         self.output_data = y
         self.exportToExcel(self.output_data,self.mainDirectory,self.tableauDataFile)
 
-class ExtractNewData(DataManagement):
+
+class ExtractOBGYNData(DataManagement):
+    def __init__(self,facilities,measures):
+        super.__init__(facilities,measures)
+
+        self.PremierLocationCodes = {
+            "ASC69 St. Vincent Anderson Reg Hospital":"SV Anderson",
+            "ASC85 St. Vincent Heart Center":"SV Heart Center",
+            "ASC20 St. Vincent Fishers":"SV Fishers",
+            "ASC09 St. Vincent Evansville":"SV Evansville",     
+            "ASC11 St. Vincent Indianapolis Hosp":"SV Indianapolis",
+            "ASC07 St. Vincent Carmel Hospital":"SV Carmel",
+            "ASC12 St. Joseph Hosp & Health Ctr":"SV Kokomo",
+        }
+
+    def extractData(self,facility,measure):
+        filenames = ["pc01_byfacility","pc02_byfacility","pc03_byfacility","psi18_byfacility","psi19_byfacility"]
+
+        for f in filenames:
+            self.importFromExcel(f)
+
+
+class ExtractHACData(DataManagement):
     def __init__(self,facilities,measures):
         super().__init__(facilities,measures)
 
@@ -608,7 +631,7 @@ class ExtractNewData(DataManagement):
                 self.moveFile(self.newDataDirectory,f,self.currentMonthDirectory)
         else: 
             print("File for {} not found.".format(measure))
- 
+
 ## Main ##
 def main():
     def getAttributes():
@@ -674,7 +697,7 @@ def main():
 
     m,f,ps = getAttributes()
     
-    extract = ExtractNewData(f,m)
+    extract = ExtractHACData(f,m)
     hac = CalculateData(ps,f,m)
 
 if __name__ == "__main__":
